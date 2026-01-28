@@ -1,187 +1,207 @@
-// src/data/mockDoors.ts
 import { Door } from '../interfaces/door';
 import { HeroSlide } from '../interfaces/hero';
 
+// --- 1. HERO SLIDER: ĐẲNG CẤP & CẢM XÚC ---
 export const heroSlides: HeroSlide[] = [
-    {
-      id: 'hero-1',
-      title: 'TAMDOOR',
-      subtitle: 'DOOR OF THE FUTURE',
-      description: 'Giải pháp cửa nhựa Composite kháng nước tuyệt đối, bền bỉ cùng thời gian.',
-      image: 'https://cdn.prod.website-files.com/66a9fa7f9de2e13a4f019d5e/66df727369e823c676b99520_11.webp',
-      cta: 'KHÁM PHÁ BỘ SƯU TẬP',
-      link: '/san-pham'
-    },
-    {
-      id: 'hero-2',
-      title: 'LUXURY',
-      subtitle: 'MODERN INTERIOR',
-      description: 'Cửa nhựa ABS Hàn Quốc chính hãng KOS kết hợp phong cách composite cao cấp – hiện đại cho mọi căn hộ.',
-      image: 'https://equityresidences.com/wp-content/uploads/2024/11/Costa-Rica-Luxury-Home-On-The-Sand-Bedroom-.-fotor-enhance-20250523172828.jpg',
-      cta: 'XEM MẪU ABS KOS & COMPOSITE',
-      link: '/san-pham/cua-nhua-abs'
-    },
-    {
-      id: 'hero-3',
-      title: 'PREMIUM COMPOSITE',
-      subtitle: 'WATERPROOF & ELEGANT',
-      description: 'Cửa composite cao cấp, chống ẩm 100%, thiết kế tinh tế – bền vững cho ngôi nhà Việt hiện đại.',
-      image: 'https://www.oilnutbay.com/wp-content/uploads/2024/08/Casino-Royale_OV1_Great-Room-1-1920x1280.jpg',
-      cta: 'KHÁM PHÁ COMPOSITE NGAY',
-      link: '/san-pham/cua-composite'
+  {
+    id: 'hero-1',
+    title: 'TAMDOOR LUXURY',
+    subtitle: 'KIỆT TÁC CỬA COMPOSITE',
+    description: 'Định nghĩa lại không gian sống với dòng cửa nhựa gỗ Composite thế hệ mới: Kháng nước tuyệt đối - Chống cong vênh - Vẻ đẹp vượt thời gian.',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop', // Ảnh phòng khách sang trọng nhìn ra cửa
+    cta: 'KHÁM PHÁ BỘ SƯU TẬP 2026',
+    link: '/san-pham'
+  },
+  {
+    id: 'hero-2',
+    title: 'KOREAN STYLE',
+    subtitle: 'TINH HOA NHỰA ABS',
+    description: 'Nhập khẩu chính hãng KOS Hàn Quốc. Thiết kế Minimalist tinh tế, nhẹ nhàng, vận hành êm ái cho căn hộ hiện đại.',
+    image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=1932&auto=format&fit=crop', // Ảnh nội thất tối giản (Minimalism)
+    cta: 'XEM MẪU ABS KOS',
+    link: '/san-pham/cua-nhua-abs'
+  },
+  {
+    id: 'hero-3',
+    title: 'SMART LOCKS',
+    subtitle: 'CÔNG NGHỆ AN NINH 4.0',
+    description: 'Bảo vệ tổ ấm với hệ thống khóa cửa điện tử vân tay, thẻ từ cao cấp. Một chạm mở ra sự tiện nghi.',
+    image: 'https://images.unsplash.com/photo-1558002038-1091a166111c?q=80&w=1932&auto=format&fit=crop', // Ảnh tay nắm cửa hiện đại
+    cta: 'PHỤ KIỆN CAO CẤP',
+    link: '/san-pham?tab=accessory'
+  }
+];
+
+// --- 2. LÝ DO CHỌN (USP) ---
+export const advantages = [
+  { icon: "🛡️", title: "Công Nghệ Kháng Nước", desc: "Cấu trúc hạt nhựa bao phủ hạt gỗ giúp cửa chống nước 100%, không trương nở." },
+  { icon: "🔥", title: "Chống Cháy Lan", desc: "Vật liệu Composite không bắt lửa, tự dập tắt khi không có nguồn nhiệt, an toàn tuyệt đối." },
+  { icon: "🔇", title: "Cách Âm Chuẩn 40dB", desc: "Hệ thống gioăng cao su giảm chấn giúp không gian riêng tư, yên tĩnh tối đa." },
+  { icon: "💎", title: "Bảo Hành 05 Năm", desc: "Cam kết chất lượng phôi cửa và bề mặt film PVC bền màu theo thời gian." },
+];
+
+// --- 3. DỰ ÁN TIÊU BIỂU (Portfolio) ---
+export const projects = [
+  { image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800", title: "Biệt thự Vinhome Riverside" },
+  { image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800", title: "Penthouse Landmark 81" },
+  { image: "https://images.unsplash.com/photo-1600607687644-c7171b42498f?q=80&w=800", title: "Khách sạn Mường Thanh" },
+  { image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=800", title: "Căn hộ Ecopark Hưng Yên" },
+];
+
+// --- 4. DỮ LIỆU SẢN PHẨM GỐC (SEED DATA) ---
+// Đây là những mẫu "chuẩn" để nhân bản
+const seedDoors: Door[] = [
+  // == CỬA COMPOSITE ==
+  {
+    id: 'comp-01',
+    name: 'Cửa Composite Phủ Film Vân Gỗ Óc Chó (Walnut)',
+    slug: 'cua-composite-walnut',
+    category: 'Nhựa Composite',
+    type: 'door',
+    price: 3850000,
+    image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=600',
+    description: 'Dòng Luxury phủ film PVC vân gỗ Óc chó sang trọng. Bề mặt sần như gỗ thật, phù hợp biệt thự.',
+    features: ['Kháng nước 100%', 'Chống cong vênh', 'Cách âm tốt'],
+    // THÔNG SỐ KỸ THUẬT CHI TIẾT
+    specifications: [
+      { key: "Kích thước tiêu chuẩn", value: "900 x 2200 mm" },
+      { key: "Độ dày cánh", value: "40 mm (± 2mm)" },
+      { key: "Độ dày khuôn", value: "100 - 125 mm" },
+      { key: "Trọng lượng cánh", value: "25 - 30 kg" },
+      { key: "Vật liệu", value: "Wood Plastic Composite (WPC)" },
+      { key: "Bề mặt", value: "Phủ Film PVC kháng khuẩn" },
+      { key: "Bảo hành", value: "05 năm (Cánh & Khuôn)" }
+    ],
+    createdAt: Date.now(),
+  },
+  {
+    id: 'comp-02',
+    name: 'Cửa Composite Soi Chỉ Nhôm Hiện Đại',
+    slug: 'cua-composite-soi-chi',
+    category: 'Nhựa Composite',
+    type: 'door',
+    price: 3650000,
+    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600',
+    description: 'Điểm nhấn chỉ nhôm (vàng/bạc) chạy dọc cánh tạo nét hiện đại.',
+    features: ['Chỉ nhôm Anode', 'Thiết kế phẳng', 'Hiện đại'],
+    specifications: [
+        { key: "Kích thước tối đa", value: "980 x 2400 mm" },
+        { key: "Độ dày cánh", value: "38 mm" },
+        { key: "Loại nẹp", value: "Nẹp cài thông minh L6" },
+        { key: "Chỉ trang trí", value: "Nhôm Anode 10mm" },
+        { key: "Khả năng chịu nước", value: "Tuyệt đối 100%" }
+    ],
+    createdAt: Date.now(),
+  },
+  
+  // == CỬA ABS HÀN QUỐC ==
+  {
+    id: 'abs-01',
+    name: 'Cửa Nhựa ABS Hàn Quốc KOS - Mẫu Phẳng',
+    slug: 'cua-abs-kos-phang',
+    category: 'Nhựa ABS Hàn Quốc',
+    type: 'door',
+    price: 3200000,
+    image: 'https://images.unsplash.com/photo-1506332033947-ca397850922c?auto=format&fit=crop&q=80&w=600',
+    description: 'Nhập khẩu 100% từ Hàn Quốc. Cấu tạo 5 lớp vững chắc, nhẹ.',
+    features: ['Nhựa ABS chính hãng', 'Chống va đập', 'Nhẹ & Bền'],
+    specifications: [
+        { key: "Xuất xứ", value: "Nhập khẩu Hàn Quốc (KOS)" },
+        { key: "Cấu tạo", value: "5 lớp (Deco-Sheet, ABS, PVC, LVL, Honeycomb)" },
+        { key: "Độ dày cánh", value: "35 mm" },
+        { key: "Trọng lượng", value: "15 - 20 kg (Nhẹ)" },
+        { key: "Ứng dụng", value: "Cửa phòng ngủ, Cửa vệ sinh" }
+    ],
+    createdAt: Date.now(),
+  },
+  
+  // == PHỤ KIỆN (KHÓA THÔNG MINH) ==
+  {
+    id: 'acc-01',
+    name: 'Khóa Điện Tử Vân Tay Kaadas S500',
+    slug: 'khoa-kaadas-s500',
+    category: 'Khóa Điện Tử',
+    type: 'accessory',
+    price: 4800000,
+    // Ảnh tay nắm cửa điện tử hiện đại
+    image: 'https://images.unsplash.com/photo-1558002038-1091a166111c?auto=format&fit=crop&q=80&w=600',
+    description: 'Công nghệ vân tay FPC Thụy Điển. Mở khóa đa năng.',
+    features: ['Vân tay FPC', 'Mã số ảo', 'Thẻ từ cao cấp'],
+    specifications: [
+        { key: "Phương thức mở", value: "Vân tay, Mã số, Thẻ từ, Chìa cơ" },
+        { key: "Vật liệu", value: "Hợp kim kẽm, Kính cường lực" },
+        { key: "Nguồn điện", value: "4 pin AA" }
+    ],
+    createdAt: Date.now(),
+  },
+  {
+    id: 'acc-02',
+    name: 'Bộ Bản Lề Inox 304 Cao Cấp',
+    slug: 'ban-le-inox-304',
+    category: 'Phụ Kiện Kim Khí',
+    type: 'accessory',
+    price: 250000,
+    // Ảnh chi tiết kim loại/bản lề
+    image: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&q=80&w=600',
+    description: 'Inox 304 mờ cao cấp, trục bi vận hành êm ái, chịu tải trọng lớn.',
+    features: ['Chống rỉ sét vĩnh viễn', 'Độ dày 3mm', 'Bảo hành 2 năm'],
+    specifications: [
+        { key: "Chất liệu", value: "Inox SUS 304" },
+        { key: "Tải trọng", value: "80kg/cánh" },
+        { key: "Quy cách", value: "4 cái/bộ" }
+    ],
+    createdAt: Date.now(),
+  },
+  {
+    id: 'acc-03',
+    name: 'Chốt Âm Cửa & Tay Nắm Tròn',
+    slug: 'chot-am-nam-cham',
+    category: 'Phụ Kiện Kim Khí',
+    type: 'accessory',
+    price: 120000,
+    // Ảnh tay nắm tròn/chốt cửa
+    image: 'https://images.unsplash.com/photo-1603053894700-df3335594002?auto=format&fit=crop&q=80&w=600',
+    description: 'Phụ kiện giữ cửa thông minh và tay nắm phong cách tối giản.',
+    features: ['Lực hút mạnh', 'Thẩm mỹ cao', 'Dễ lắp đặt'],
+    specifications: [
+        { key: "Chất liệu", value: "Hợp kim/Inox" },
+        { key: "Màu sắc", value: "Đen mờ / Bạc xước" }
+    ],
+    createdAt: Date.now(),
+  }
+];
+
+// --- GENERATOR GIỮ NGUYÊN ---
+const generateFullData = (): Door[] => {
+  const fullList: Door[] = [];
+  const colors = ['Màu Trắng Sứ', 'Màu Gỗ Sồi', 'Màu Óc Chó', 'Màu Ghi Xám', 'Màu Nâu Cafe'];
+  
+  seedDoors.filter(d => d.type === 'door').forEach(base => {
+    colors.forEach((color, index) => {
+      fullList.push({
+        ...base,
+        id: `${base.id}-v${index}`,
+        name: `${base.name} - ${color}`,
+        price: base.price + (index * 100000),
+        image: base.image, 
+        slug: `${base.slug}-${index}`,
+        createdAt: Date.now() - index * 100000
+      });
+    });
+  });
+
+  seedDoors.filter(d => d.type === 'accessory').forEach(base => {
+    for(let i=1; i<=3; i++) {
+        fullList.push({
+            ...base,
+            id: `${base.id}-v${i}`,
+            name: `${base.name} (Lô ${2024 + i})`,
+            slug: `${base.slug}-${i}`,
+        });
     }
-  ];
-  export const mockDoors: Door[] = [
-    {
-      id: 'd1',
-      name: 'Cửa Nhựa Composite Sungyu Phủ Film Vân Sồi Trắng',
-      slug: 'cua-nhua-composite-sungyu',
-      category: 'Nhựa Composite',
-      type: 'door',
-      price: 3500000,
-      image: 'https://images.pexels.com/photos/7005281/pexels-photo-7005281.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', // Phòng ngủ hiện đại minimalist với cửa vân gỗ sáng
-      description: 'Kháng nước 100%, không cong vênh, cách âm tốt, bền bỉ 20-30 năm.',
-      features: ['Kháng nước tuyệt đối', 'Cách âm 40dB', 'Chống mối mọt & cháy lan', 'Vân gỗ tự nhiên cao cấp'],
-      createdAt: Date.now(),
-    },
-    {
-      id: 'd3',
-      name: 'Cửa Composite Cao Cấp Vân Óc Chó Đen',
-      slug: 'cua-composite-van-oc-cho',
-      category: 'Nhựa Composite',
-      type: 'door',
-      price: 4200000,
-      image: 'https://cdn.mos.cms.futurecdn.net/H73mVvQQs96oPvDTPPWTTY-1500-80.jpg', // Phòng khách luxury với cửa tối màu sang trọng
-      description: 'Thiết kế tinh tế, bề mặt phủ film chống xước, phù hợp villa & căn hộ cao cấp.',
-      features: ['Chống ẩm 100%', 'Cách nhiệt tốt', 'Bề mặt chống xước', 'Thiết kế 2 lớp'],
-      createdAt: Date.now(),
-    },
-    {
-      id: 'd4',
-      name: 'Cửa Nhựa Composite Vân Xám Hiện Đại',
-      slug: 'cua-composite-van-xam',
-      category: 'Nhựa Composite',
-      type: 'door',
-      price: 3800000,
-      image: 'https://cdn.prod.website-files.com/66a9fa7f9de2e13a4f019d5e/66df4d7039a0f604c154982b_3.webp', // Nội thất hiện đại với cửa xám nhạt
-      description: 'Phong cách minimalist, dễ phối nội thất, chống nước hoàn hảo cho khí hậu Việt Nam.',
-      features: ['Kháng nước & ẩm cao', 'Dễ lau chùi', 'Cách âm hiệu quả'],
-      createdAt: Date.now(),
-    },
-  
-    // --- NHÓM CỬA NHỰA ABS HÀN QUỐC ---
-    {
-      id: 'd5',
-      name: 'Cửa Nhựa ABS Hàn Quốc KOS Vân Gỗ Sáng',
-      slug: 'cua-nhua-abs-kos',
-      category: 'Nhựa ABS Hàn Quốc',
-      type: 'door',
-      price: 4500000,
-      image: 'https://liveandletsfly.boardingarea.com/wp-content/uploads/2019/12/Park-Hyatt-New-York-Review-95.jpg', // Phòng ngủ luxury Hàn Quốc style
-      description: 'Nhập khẩu chính hãng, bề mặt bóng mịn, thiết kế tinh tế cho căn hộ hiện đại.',
-      features: ['Bề mặt ABS cao cấp', 'Chống va đập', 'Cách âm & nhiệt', 'Thiết kế Hàn Quốc'],
-      createdAt: Date.now(),
-    },
-    {
-      id: 'd6',
-      name: 'Cửa ABS Phủ Veneer Gỗ Tự Nhiên',
-      slug: 'cua-abs-veneer',
-      category: 'Nhựa ABS Hàn Quốc',
-      type: 'door',
-      price: 4800000,
-      image: 'https://liveandletsfly.com/wp-content/uploads/2024/03/Alila-Bangsar-Review-12.jpeg', // Nội thất sang trọng với cửa vân gỗ
-      description: 'Kết hợp ABS bền bỉ với lớp veneer gỗ thật, vẻ đẹp tự nhiên.',
-      features: ['Vân gỗ thật 100%', 'Chống nước tốt', 'Bền màu lâu dài'],
-      createdAt: Date.now(),
-    },
-  
-    // --- NHÓM CỬA GỖ HDF VENEER ---
-    {
-      id: 'd2',
-      name: 'Cửa Gỗ Công Nghiệp HDF Veneer Vân Sồi',
-      slug: 'cua-go-hdf',
-      category: 'Gỗ Công Nghiệp',
-      type: 'door',
-      price: 2800000,
-      image: 'https://i1.pickpik.com/photos/127/508/938/home-modern-furniture-luxury-preview.jpg', // Cửa trắng mở trong phòng hiện đại
-      description: 'Lớp veneer gỗ tự nhiên, giá thành hợp lý, sang trọng cho nhà phố.',
-      features: ['Veneer cao cấp', 'Cách âm tốt', 'Không cong vênh'],
-      createdAt: Date.now(),
-    },
-  
-    // --- NHÓM PHỤ KIỆN ---
-    {
-      id: 'a1',
-      name: 'Khóa Tay Gạt Huy Hoàng Cao Cấp',
-      slug: 'khoa-tay-gat-huy-hoang',
-      category: 'Phụ Kiện Khóa',
-      type: 'accessory',
-      price: 450000,
-      image: 'https://p2.piqsels.com/preview/506/82/507/door-handle-door-knob-jack-door-lock.jpg', // Cận cảnh tay gạt hiện đại
-      description: 'Hợp kim kẽm cao cấp, chống gỉ, độ bền cao, thiết kế sang trọng.',
-      features: ['Chống gỉ sét', 'Dễ lắp đặt', 'Bảo hành 5 năm'],
-      createdAt: Date.now(),
-    },
-    {
-      id: 'a2',
-      name: 'Bản Lề Inox 304 Chống Gỉ (Cái)',
-      slug: 'ban-le-inox-304',
-      category: 'Phụ Kiện Bản Lề',
-      type: 'accessory',
-      price: 65000,
-      image: 'https://media.musson.com/catalog/product/4/5/45-223__tightpin15.jpg', // Cận cảnh bản lề inox premium
-      description: 'Inox 304 chịu lực tốt, đóng mở êm ái, phù hợp mọi loại cửa.',
-      features: ['Chịu lực cao', 'Không gỉ', 'Độ bền 10+ năm'],
-      createdAt: Date.now(),
-    },
-    {
-      id: 'a3',
-      name: 'Tay Nắm Cửa Inox Vân Gỗ',
-      slug: 'tay-nam-cua-inox',
-      category: 'Phụ Kiện Tay Nắm',
-      type: 'accessory',
-      price: 320000,
-      image: 'https://www.decoranddecor.com/cdn/shop/files/hera-internal-door-handles-brushed-satin-nickel-255.webp?v=1744057312&width=1600', // Tay nắm satin nickel luxury
-      description: 'Thiết kế vân gỗ kết hợp inox, sang trọng và hiện đại.',
-      features: ['Chống xước', 'Dễ vệ sinh', 'Phù hợp cửa composite'],
-      createdAt: Date.now(),
-    },
-    {
-      id: 'a4',
-      name: 'Chốt Cửa An Toàn Inox 304',
-      slug: 'chot-cua-inox',
-      category: 'Phụ Kiện Khóa',
-      type: 'accessory',
-      price: 180000,
-      image: 'https://dash.iwantthatdoor.com//Blogs/Images/1763601970_MetalDoorLocksTrends2025.jpg', // Khóa chốt hiện đại
-      description: 'Chốt an toàn cho cửa chính/phòng ngủ, chống đột nhập.',
-      features: ['An toàn cao', 'Inox bền bỉ', 'Lắp đặt dễ'],
-      createdAt: Date.now(),
-    },
-  ];
-  export const advantages = [
-    { icon: '💧', title: 'Kháng nước 100%', desc: 'Tuyệt đối không thấm nước, phù hợp khí hậu Việt Nam.' },
-    { icon: '🛡️', title: 'Bền bỉ 30 năm', desc: 'Không cong vênh, không mối mọt, bảo hành dài hạn.' },
-    { icon: '🌿', title: 'Thân thiện môi trường', desc: 'Vật liệu composite tái chế, an toàn sức khỏe.' },
-    { icon: '🔇', title: 'Cách âm & nhiệt tốt', desc: 'Giảm tiếng ồn, tiết kiệm năng lượng.' },
-  ];
-  
-  // Thêm mảng projects (công trình thực tế, ảnh cập nhật mới, phù hợp luxury Việt Nam/modern)
-  export const projects = [
-    {
-      image: 'https://cdn.prod.website-files.com/66a9fa7f9de2e13a4f019d5e/66df4d70372183f2d933d905_7.webp',
-      title: 'Căn hộ cao cấp Quận 1'
-    },
-    {
-      image: 'https://cdn.prod.website-files.com/644af96a8705d9be228df360/644c3fbeabd6b2df0bf9f79b_Commonwealth_11_web.jpg',
-      title: 'Villa Phú Mỹ Hưng'
-    },
-    {
-      image: 'https://cdn.prod.website-files.com/66a9fa7f9de2e13a4f019d5e/66df4d7039a0f604c154982b_3.webp',
-      title: 'Resort Đà Nẵng'
-    },
-    {
-      image: 'https://www.newwindsrealty.com/wp-content/uploads/2024/12/4a.jpg',
-      title: 'Căn hộ luxury Quận 7'
-    },
-  ];
+  });
+
+  return fullList;
+};
+
+export const mockDoors = generateFullData();

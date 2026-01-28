@@ -14,7 +14,12 @@ export interface Project {
   image: string;
   title: string;
 }
-
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  currentPage: number;
+  totalPages: number;
+}
 export const doorService = {
   // 1. Lấy toàn bộ sản phẩm (Cửa + Phụ kiện)
   getAllProducts: async (): Promise<Door[]> => {
@@ -45,8 +50,6 @@ export const doorService = {
       setTimeout(() => resolve([...heroSlides]), 300);
     });
   },
-
-  // === PHẦN MỚI: Hỗ trợ các section trang chủ ===
   
   // 5. Lấy danh sách ưu điểm nổi bật (Tại sao chọn TAMDOOR)
   getAdvantages: async (): Promise<Advantage[]> => {
@@ -86,6 +89,37 @@ export const doorService = {
           item.category.toLowerCase().includes(keyword.toLowerCase())
       );
       setTimeout(() => resolve(results), 600);
+    });
+  },
+  getProductsPaginated: async (
+    type: 'door' | 'accessory', 
+    page: number = 1, 
+    limit: number = 8
+  ): Promise<PaginatedResult<Door>> => {
+    return new Promise((resolve) => {
+      // 1. Lọc theo loại
+      let filtered = mockDoors.filter((item) => item.type === type);
+      // Khi có database thật thì xóa đoạn này đi
+      if (filtered.length < 12) {
+         filtered = [...filtered, ...filtered, ...filtered, ...filtered, ...filtered].map((item, index) => ({
+            ...item, 
+            id: `${item.id}_clone_${index}`
+         }));
+      }
+
+      // 2. Tính toán phân trang
+      const total = filtered.length;
+      const totalPages = Math.ceil(total / limit);
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const data = filtered.slice(startIndex, endIndex);
+
+      setTimeout(() => resolve({
+        data,
+        total,
+        currentPage: page,
+        totalPages
+      }), 500); // Giả lập độ trễ server
     });
   },
 };
