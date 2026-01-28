@@ -25,7 +25,7 @@ import 'swiper/css/navigation';
 const App = () => {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [doors, setDoors] = useState<Door[]>([]);
-  const [accessories, setAccessories] = useState<Door[]>([]);
+  // const [accessories, setAccessories] = useState<Door[]>([]);
   const [advantages, setAdvantages] = useState<Advantage[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
