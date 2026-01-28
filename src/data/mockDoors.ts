@@ -7,8 +7,7 @@ export const heroSlides: HeroSlide[] = [
       id: 'hero-1',
       title: 'TAMDOOR',
       subtitle: 'DOOR OF THE FUTURE',
-      description: 'Giải pháp cửa nhựa Composite kháng nước tuyệt đối, bền bỉ cùng thời gian – lấy cảm hứng từ Green Life Door.',
-      // Ảnh mới: Phòng ngủ luxury với cửa composite vân gỗ sáng, không gian ấm cúng cao cấp, ánh sáng tự nhiên
+      description: 'Giải pháp cửa nhựa Composite kháng nước tuyệt đối, bền bỉ cùng thời gian.',
       image: 'https://cdn.prod.website-files.com/66a9fa7f9de2e13a4f019d5e/66df727369e823c676b99520_11.webp',
       cta: 'KHÁM PHÁ BỘ SƯU TẬP',
       link: '/san-pham'
@@ -17,8 +16,7 @@ export const heroSlides: HeroSlide[] = [
       id: 'hero-2',
       title: 'LUXURY',
       subtitle: 'MODERN INTERIOR',
-      description: 'Cửa nhựa ABS Hàn Quốc chính hãng KOS kết hợp phong cách composite cao cấp như Green Life – hiện đại cho mọi căn hộ.',
-      // Ảnh mới: Không gian phòng khách/villa hiện đại với cửa composite tinh tế, minimalist, sáng sủa
+      description: 'Cửa nhựa ABS Hàn Quốc chính hãng KOS kết hợp phong cách composite cao cấp – hiện đại cho mọi căn hộ.',
       image: 'https://equityresidences.com/wp-content/uploads/2024/11/Costa-Rica-Luxury-Home-On-The-Sand-Bedroom-.-fotor-enhance-20250523172828.jpg',
       cta: 'XEM MẪU ABS KOS & COMPOSITE',
       link: '/san-pham/cua-nhua-abs'
@@ -27,15 +25,13 @@ export const heroSlides: HeroSlide[] = [
       id: 'hero-3',
       title: 'PREMIUM COMPOSITE',
       subtitle: 'WATERPROOF & ELEGANT',
-      description: 'Cửa composite cao cấp, chống ẩm 100%, thiết kế tinh tế – bền vững cho ngôi nhà Việt hiện đại, tham khảo từ Green Life Door.',
-      // Ảnh mới: Villa sang trọng với cửa composite vân gỗ tự nhiên, nội thất luxury, không gian rộng rãi
+      description: 'Cửa composite cao cấp, chống ẩm 100%, thiết kế tinh tế – bền vững cho ngôi nhà Việt hiện đại.',
       image: 'https://www.oilnutbay.com/wp-content/uploads/2024/08/Casino-Royale_OV1_Great-Room-1-1920x1280.jpg',
       cta: 'KHÁM PHÁ COMPOSITE NGAY',
       link: '/san-pham/cua-composite'
     }
   ];
   export const mockDoors: Door[] = [
-    // --- NHÓM CỬA NHỰA COMPOSITE (chính, lấy cảm hứng Green Life/Sungyu) ---
     {
       id: 'd1',
       name: 'Cửa Nhựa Composite Sungyu Phủ Film Vân Sồi Trắng',
@@ -184,7 +180,6 @@ export const heroSlides: HeroSlide[] = [
       image: 'https://cdn.prod.website-files.com/66a9fa7f9de2e13a4f019d5e/66df4d7039a0f604c154982b_3.webp',
       title: 'Resort Đà Nẵng'
     },
-    // Thêm 1 cái nữa để grid đẹp hơn (tùy chọn)
     {
       image: 'https://www.newwindsrealty.com/wp-content/uploads/2024/12/4a.jpg',
       title: 'Căn hộ luxury Quận 7'
