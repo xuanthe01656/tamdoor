@@ -158,7 +158,7 @@ const App = () => {
                 activeTab === 'door' ? 'bg-blue-700 text-white shadow-lg' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Cửa nhựa
+              Cửa Composite
             </button>
             <button
               onClick={() => setActiveTab('accessory')}

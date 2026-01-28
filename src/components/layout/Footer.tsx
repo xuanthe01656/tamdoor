@@ -39,9 +39,9 @@ const Footer = () => {
           <div className="bg-white/5 p-6 rounded-2xl border border-white/10">
             <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Liên hệ trực tiếp</h4>
             <div className="space-y-3">
-              <p className="text-sm text-blue-400 font-bold italic">Hotline Miền Nam:</p>
+              <p className="text-sm text-blue-400 font-bold italic">Hotline Miền Trung:</p>
               <p className="text-white font-bold text-lg">0901 234 567</p>
-              <p className="text-xs">Đ/c: 123 Đường TamDoor, TP. Hồ Chí Minh</p>
+              <p className="text-xs">Đ/c: 123 Đường TamDoor, TP. Đà Nẵng</p>
             </div>
           </div>
         </div>
