@@ -6,6 +6,9 @@ import HomePage from './pages/client/HomePage'
 import ProductList from './pages/client/ProductList' 
 import AboutPage from './pages/client/AboutPage';
 import ContactPage from './pages/client/ContactPage';
+import WarrantyPage from './pages/client/WarrantyPage'
+import ProcessPage from './pages/client/ProcessPage'
+import FAQPage from './pages/client/FAQPage'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -15,11 +18,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />, // Đây là trang chủ
+        element: <HomePage />, 
       },
       {
         path: "san-pham",
-        element: <ProductList />, // Đây là trang danh sách sản phẩm
+        element: <ProductList />, 
       },
       {
         path: "ve-chung-toi",
@@ -29,6 +32,9 @@ const router = createBrowserRouter([
         path: "lien-he",
         element: <ContactPage />,
       },
+      { path: "chinh-sach-bao-hanh", element: <WarrantyPage /> },
+      { path: "quy-trinh-lam-viec", element: <ProcessPage /> },
+      { path: "cau-hoi-thuong-gap", element: <FAQPage /> },
     ],
   },
   {

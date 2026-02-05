@@ -1,9 +1,18 @@
 import { Door } from '../interfaces/door';
 import { HeroSlide } from '../interfaces/hero';
 import { MOCK_PRODUCTS } from '../data/mockProducts';
-import { MOCK_SLIDES, MOCK_ADVANTAGES, MOCK_PROJECTS } from '../data/mockCMS';
+import { 
+  MOCK_SLIDES, 
+  MOCK_ADVANTAGES, 
+  MOCK_PROJECTS,
+  MOCK_FAQS,       
+  MOCK_PROCESS,    
+  MOCK_WARRANTY    
+} from '../data/mockCMS';
 
-// --- ĐỊNH NGHĨA TYPES ---
+// --- ĐỊNH NGHĨA TYPES (INTERFACES) ---
+
+// 1. Types cũ
 export interface Advantage {
   icon: string;
   title: string;
@@ -22,9 +31,31 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
+// 2. Types mới cho các trang vệ tinh
+export interface FAQItem {
+  q: string;
+  a: string;
+}
+
+export interface ProcessStep {
+  step: string;
+  title: string;
+  desc: string;
+}
+
+export interface WarrantyPolicy {
+  periods: { product: string; time: string; scope: string }[];
+  conditions: string[];
+  refusals: string[];
+}
+
 // --- SERVICE LOGIC ---
 export const doorService = {
-  // 1. Lấy toàn bộ sản phẩm (Cửa + Phụ kiện)
+  // ==========================================
+  // A. NHÓM API SẢN PHẨM (PRODUCT CORE)
+  // ==========================================
+
+  // 1. Lấy toàn bộ sản phẩm
   getAllProducts: async (): Promise<Door[]> => {
     return new Promise((resolve) => {
       setTimeout(() => resolve([...MOCK_PRODUCTS]), 300);
@@ -47,41 +78,18 @@ export const doorService = {
     });
   },
 
-  // 4. Lấy dữ liệu Hero Slides (Banner)
-  getHeroSlides: async (): Promise<HeroSlide[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve([...MOCK_SLIDES]), 100);
-    });
-  },
-  
-  // 5. Lấy danh sách ưu điểm (Tại sao chọn...)
-  getAdvantages: async (): Promise<Advantage[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve([...MOCK_ADVANTAGES]), 100);
-    });
-  },
-
-  // 6. Lấy danh sách công trình thực tế
-  getProjects: async (limit: number = 6): Promise<Project[]> => {
-    return new Promise((resolve) => {
-      const limitedProjects = MOCK_PROJECTS.slice(0, limit);
-      setTimeout(() => resolve([...limitedProjects]), 200);
-    });
-  },
-
-  // 7. Lấy sản phẩm nổi bật (Lấy cửa đắt tiền nhất để show)
+  // 4. Lấy sản phẩm nổi bật (Logic: Lấy cửa đắt tiền nhất)
   getFeaturedProducts: async (limit: number = 8): Promise<Door[]> => {
     return new Promise((resolve) => {
       const featured = MOCK_PRODUCTS
-        .filter(p => p.type === 'door') // Chỉ lấy cửa
-        .sort((a, b) => b.price - a.price) // Sắp xếp giá cao xuống thấp
+        .filter(p => p.type === 'door')
+        .sort((a, b) => b.price - a.price)
         .slice(0, limit);
-      
       setTimeout(() => resolve([...featured]), 400);
     });
   },
 
-  // 8. Tìm kiếm sản phẩm
+  // 5. Tìm kiếm sản phẩm
   searchProducts: async (keyword: string): Promise<Door[]> => {
     return new Promise((resolve) => {
       if (!keyword.trim()) {
@@ -99,17 +107,15 @@ export const doorService = {
     });
   },
 
-  // 9. Lấy danh sách phân trang (Pagination)
+  // 6. Lấy danh sách phân trang (Pagination)
   getProductsPaginated: async (
     type: 'door' | 'accessory', 
     page: number = 1, 
     limit: number = 8
   ): Promise<PaginatedResult<Door>> => {
     return new Promise((resolve) => {
-      // a. Lọc theo loại
       const filtered = MOCK_PRODUCTS.filter((item) => item.type === type);
       
-      // b. Tính toán phân trang
       const total = filtered.length;
       const totalPages = Math.ceil(total / limit);
       const startIndex = (page - 1) * limit;
@@ -117,7 +123,6 @@ export const doorService = {
       
       const data = filtered.slice(startIndex, endIndex);
 
-      // c. Trả về kết quả
       setTimeout(() => resolve({
         data,
         total,
@@ -126,4 +131,41 @@ export const doorService = {
       }), 400); 
     });
   },
+
+  // ==========================================
+  // B. NHÓM API NỘI DUNG (CMS / CONTENT)
+  // ==========================================
+
+  // 7. Lấy dữ liệu Hero Slides (Banner)
+  getHeroSlides: async (): Promise<HeroSlide[]> => {
+    return new Promise((resolve) => setTimeout(() => resolve([...MOCK_SLIDES]), 100));
+  },
+  
+  // 8. Lấy danh sách ưu điểm (Tại sao chọn...)
+  getAdvantages: async (): Promise<Advantage[]> => {
+    return new Promise((resolve) => setTimeout(() => resolve([...MOCK_ADVANTAGES]), 100));
+  },
+
+  // 9. Lấy danh sách công trình thực tế
+  getProjects: async (limit: number = 6): Promise<Project[]> => {
+    return new Promise((resolve) => {
+      const limitedProjects = MOCK_PROJECTS.slice(0, limit);
+      setTimeout(() => resolve([...limitedProjects]), 200);
+    });
+  },
+
+  // 10. Lấy danh sách câu hỏi thường gặp (FAQ)
+  getFAQs: async (): Promise<FAQItem[]> => {
+    return new Promise((resolve) => setTimeout(() => resolve([...MOCK_FAQS]), 100));
+  },
+
+  // 11. Lấy quy trình làm việc
+  getProcessSteps: async (): Promise<ProcessStep[]> => {
+    return new Promise((resolve) => setTimeout(() => resolve([...MOCK_PROCESS]), 100));
+  },
+
+  // 12. Lấy chính sách bảo hành
+  getWarrantyPolicy: async (): Promise<WarrantyPolicy> => {
+    return new Promise((resolve) => setTimeout(() => resolve(MOCK_WARRANTY), 100));
+  }
 };

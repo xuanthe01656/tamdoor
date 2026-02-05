@@ -46,3 +46,80 @@ export const MOCK_PROJECTS = [
   { image: "https://images.unsplash.com/photo-1600607687644-c7171b42498f?q=80&w=800", title: "Khách sạn Mường Thanh" },
   { image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=800", title: "Căn hộ Ecopark Hưng Yên" },
 ];
+
+// 4. CÂU HỎI THƯỜNG GẶP (FAQ)
+export const MOCK_FAQS = [
+  {
+    q: "Cửa nhựa Composite có bền không? Có chịu được nước không?",
+    a: "Cửa nhựa Composite của CasarDoor được làm từ bột gỗ và hạt nhựa PVC đùn nguyên khối, có khả năng CHỊU NƯỚC TUYỆT ĐỐI 100%. Sản phẩm không bị cong vênh, mối mọt, tuổi thọ lên đến 20 năm."
+  },
+  {
+    q: "Giá cửa đã bao gồm phụ kiện và công lắp đặt chưa?",
+    a: "Báo giá trên website thường là giá cánh và khung bao. Chi phí nẹp chỉ, bản lề, khóa và công lắp đặt sẽ được tính riêng tùy theo số lượng và vị trí công trình."
+  },
+  {
+    q: "Thời gian đặt hàng và lắp đặt là bao lâu?",
+    a: "Đối với các mẫu màu tiêu chuẩn có sẵn, thời gian lắp đặt từ 3-5 ngày. Đối với các mẫu đặt kích thước riêng, thời gian từ 7-10 ngày."
+  },
+  {
+    q: "CasarDoor có thi công ở tỉnh không?",
+    a: "Hiện tại CasarDoor tập trung thi công chính tại TP. Đà Nẵng và các vùng lân cận (Quảng Nam, Huế). Với tỉnh xa, chúng tôi hỗ trợ giao hàng ra chành xe."
+  },
+  {
+    q: "Tôi có thể sử dụng lại khóa cũ cho cửa mới không?",
+    a: "Hoàn toàn được, nếu khóa cũ của quý khách vẫn còn tốt và phù hợp với độ dày đố cửa mới (thường là 40mm)."
+  }
+];
+
+// 5. QUY TRÌNH LÀM VIỆC (PROCESS)
+export const MOCK_PROCESS = [
+  {
+    step: "01",
+    title: "Tiếp nhận & Tư vấn",
+    desc: "Khách hàng liên hệ qua Hotline/Website. Nhân viên tư vấn sơ bộ về mẫu mã, chất liệu và báo giá dự toán."
+  },
+  {
+    step: "02",
+    title: "Khảo sát thực tế",
+    desc: "Kỹ thuật viên đến công trình đo đạc kích thước ô chờ chính xác và tư vấn giải pháp thi công tối ưu."
+  },
+  {
+    step: "03",
+    title: "Ký hợp đồng & Sản xuất",
+    desc: "Chốt mẫu mã, màu sắc, kích thước và đặt cọc. Đơn hàng được chuyển về nhà máy sản xuất (5-7 ngày)."
+  },
+  {
+    step: "04",
+    title: "Vận chuyển & Lắp đặt",
+    desc: "Vận chuyển cửa đến công trình. Đội ngũ thợ lành nghề tiến hành lắp đặt, bắn keo, vệ sinh."
+  },
+  {
+    step: "05",
+    title: "Nghiệm thu & Bàn giao",
+    desc: "Khách hàng kiểm tra vận hành cửa. Ký biên bản nghiệm thu, thanh toán và nhận phiếu bảo hành."
+  }
+];
+
+// 6. CHÍNH SÁCH BẢO HÀNH (WARRANTY)
+export const MOCK_WARRANTY = {
+  // Dữ liệu bảng thời gian bảo hành
+  periods: [
+    { product: "Cửa Nhựa Composite", time: "05 Năm", scope: "Cong vênh, mối mọt, thấm nước" },
+    { product: "Cửa Nhựa ABS Hàn Quốc", time: "03 Năm", scope: "Bong tróc bề mặt, lỗi NSX" },
+    { product: "Khóa cửa điện tử", time: "24 Tháng", scope: "Lỗi bo mạch, vân tay, cảm ứng" },
+    { product: "Phụ kiện kim khí", time: "12 Tháng", scope: "Rỉ sét, gãy lẫy, kẹt khóa" }
+  ],
+  // Điều kiện hợp lệ
+  conditions: [
+    "Sản phẩm còn trong thời hạn bảo hành tính từ ngày bàn giao.",
+    "Tem bảo hành còn nguyên vẹn, không cạo sửa.",
+    "Lỗi kỹ thuật do nhà sản xuất hoặc lỗi lắp đặt của CasarDoor.",
+    "Có phiếu bảo hành hoặc hợp đồng kinh tế."
+  ],
+  // Từ chối bảo hành
+  refusals: [
+    "Hư hỏng do tác động cơ học (rơi vỡ, va đập mạnh).",
+    "Hư hỏng do thiên tai, hỏa hoạn, lũ lụt.",
+    "Khách hàng tự ý tháo dỡ, sửa chữa thay đổi kết cấu."
+  ]
+};
