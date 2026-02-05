@@ -1,56 +1,7 @@
 import { Door } from '../interfaces/door';
-import { HeroSlide } from '../interfaces/hero';
 
-// --- 1. HERO SLIDER: ĐẲNG CẤP & CẢM XÚC ---
-export const heroSlides: HeroSlide[] = [
-  {
-    id: 'hero-1',
-    title: 'CASARDOOR LUXURY',
-    subtitle: 'KIỆT TÁC CỬA COMPOSITE',
-    description: 'Định nghĩa lại không gian sống với dòng cửa nhựa gỗ Composite thế hệ mới: Kháng nước tuyệt đối - Chống cong vênh - Vẻ đẹp vượt thời gian.',
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop',
-    cta: 'KHÁM PHÁ BỘ SƯU TẬP 2026',
-    link: '/san-pham'
-  },
-  {
-    id: 'hero-2',
-    title: 'KOREAN STYLE',
-    subtitle: 'TINH HOA NHỰA ABS',
-    description: 'Nhập khẩu chính hãng KOS Hàn Quốc. Thiết kế Minimalist tinh tế, nhẹ nhàng, vận hành êm ái cho căn hộ hiện đại.',
-    image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=1932&auto=format&fit=crop', 
-    cta: 'XEM MẪU ABS KOS',
-    link: '/san-pham/cua-nhua-abs'
-  },
-  {
-    id: 'hero-3',
-    title: 'SMART LOCKS',
-    subtitle: 'CÔNG NGHỆ AN NINH 4.0',
-    description: 'Bảo vệ tổ ấm với hệ thống khóa cửa điện tử vân tay, thẻ từ cao cấp. Một chạm mở ra sự tiện nghi.',
-    image: 'https://images.unsplash.com/photo-1558002038-1091a166111c?q=80&w=2070&auto=format&fit=crop',
-    cta: 'PHỤ KIỆN CAO CẤP',
-    link: '/san-pham?tab=accessory'
-  }
-];
-
-// --- 2. LÝ DO CHỌN (USP) ---
-export const advantages = [
-  { icon: "🛡️", title: "Công Nghệ Kháng Nước", desc: "Cấu trúc hạt nhựa bao phủ hạt gỗ giúp cửa chống nước 100%, không trương nở." },
-  { icon: "🔥", title: "Chống Cháy Lan", desc: "Vật liệu Composite không bắt lửa, tự dập tắt khi không có nguồn nhiệt, an toàn tuyệt đối." },
-  { icon: "🔇", title: "Cách Âm Chuẩn 40dB", desc: "Hệ thống gioăng cao su giảm chấn giúp không gian riêng tư, yên tĩnh tối đa." },
-  { icon: "💎", title: "Bảo Hành 05 Năm", desc: "Cam kết chất lượng phôi cửa và bề mặt film PVC bền màu theo thời gian." },
-];
-
-// --- 3. DỰ ÁN TIÊU BIỂU (Portfolio) ---
-export const projects = [
-  { image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800", title: "Biệt thự Vinhome Riverside" },
-  { image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800", title: "Penthouse Landmark 81" },
-  { image: "https://images.unsplash.com/photo-1600607687644-c7171b42498f?q=80&w=800", title: "Khách sạn Mường Thanh" },
-  { image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=800", title: "Căn hộ Ecopark Hưng Yên" },
-];
-
-// --- 4. DỮ LIỆU SẢN PHẨM GỐC (SEED DATA) ---
-// Đây là những mẫu "chuẩn" để nhân bản
-const seedDoors: Door[] = [
+// DỮ LIỆU SẢN PHẨM GỐC (SEED DATA)
+const seedProducts: Door[] = [
   // == CỬA COMPOSITE ==
   {
     id: 'comp-01',
@@ -62,7 +13,6 @@ const seedDoors: Door[] = [
     image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=600',
     description: 'Dòng Luxury phủ film PVC vân gỗ Óc chó sang trọng. Bề mặt sần như gỗ thật, phù hợp biệt thự.',
     features: ['Kháng nước 100%', 'Chống cong vênh', 'Cách âm tốt'],
-    // THÔNG SỐ KỸ THUẬT CHI TIẾT
     specifications: [
       { key: "Kích thước tiêu chuẩn", value: "900 x 2200 mm" },
       { key: "Độ dày cánh", value: "40 mm (± 2mm)" },
@@ -123,7 +73,6 @@ const seedDoors: Door[] = [
     category: 'Khóa Điện Tử',
     type: 'accessory',
     price: 4800000,
-    // Ảnh tay nắm cửa điện tử hiện đại
     image: 'https://images.unsplash.com/photo-1558002038-1091a166111c?auto=format&fit=crop&q=80&w=600',
     description: 'Công nghệ vân tay FPC Thụy Điển. Mở khóa đa năng.',
     features: ['Vân tay FPC', 'Mã số ảo', 'Thẻ từ cao cấp'],
@@ -141,7 +90,6 @@ const seedDoors: Door[] = [
     category: 'Phụ Kiện Kim Khí',
     type: 'accessory',
     price: 250000,
-    // Ảnh chi tiết kim loại/bản lề
     image: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&q=80&w=600',
     description: 'Inox 304 mờ cao cấp, trục bi vận hành êm ái, chịu tải trọng lớn.',
     features: ['Chống rỉ sét vĩnh viễn', 'Độ dày 3mm', 'Bảo hành 2 năm'],
@@ -159,7 +107,6 @@ const seedDoors: Door[] = [
     category: 'Phụ Kiện Kim Khí',
     type: 'accessory',
     price: 120000,
-    // Ảnh tay nắm tròn/chốt cửa
     image: 'https://images.unsplash.com/photo-1603053894700-df3335594002?auto=format&fit=crop&q=80&w=600',
     description: 'Phụ kiện giữ cửa thông minh và tay nắm phong cách tối giản.',
     features: ['Lực hút mạnh', 'Thẩm mỹ cao', 'Dễ lắp đặt'],
@@ -171,18 +118,19 @@ const seedDoors: Door[] = [
   }
 ];
 
-// --- GENERATOR GIỮ NGUYÊN ---
+// --- HÀM TẠO DỮ LIỆU MOCK (GENERATOR) ---
 const generateFullData = (): Door[] => {
   const fullList: Door[] = [];
   const colors = ['Màu Trắng Sứ', 'Màu Gỗ Sồi', 'Màu Óc Chó', 'Màu Ghi Xám', 'Màu Nâu Cafe'];
   
-  seedDoors.filter(d => d.type === 'door').forEach(base => {
+  // Nhân bản Cửa
+  seedProducts.filter(d => d.type === 'door').forEach(base => {
     colors.forEach((color, index) => {
       fullList.push({
         ...base,
         id: `${base.id}-v${index}`,
         name: `${base.name} - ${color}`,
-        price: base.price + (index * 100000),
+        price: base.price + (index * 100000), // Giữ nguyên logic tăng giá
         image: base.image, 
         slug: `${base.slug}-${index}`,
         createdAt: Date.now() - index * 100000
@@ -190,13 +138,15 @@ const generateFullData = (): Door[] => {
     });
   });
 
-  seedDoors.filter(d => d.type === 'accessory').forEach(base => {
+  // Nhân bản Phụ kiện
+  seedProducts.filter(d => d.type === 'accessory').forEach(base => {
     for(let i=1; i<=3; i++) {
         fullList.push({
             ...base,
             id: `${base.id}-v${i}`,
             name: `${base.name} (Lô ${2024 + i})`,
             slug: `${base.slug}-${i}`,
+            createdAt: Date.now() - i * 50000
         });
     }
   });
@@ -204,4 +154,4 @@ const generateFullData = (): Door[] => {
   return fullList;
 };
 
-export const mockDoors = generateFullData();
+export const MOCK_PRODUCTS = generateFullData();

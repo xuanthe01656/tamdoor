@@ -1,11 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import App from './App'
 import MainLayout from './components/layout/MainLayout'
+import HomePage from './pages/client/HomePage'       
+import ProductList from './pages/client/ProductList' 
+import AboutPage from './pages/client/AboutPage';
+import ContactPage from './pages/client/ContactPage';
 import './index.css'
 
-// 1. Định nghĩa danh sách các trang
 const router = createBrowserRouter([
   {
     path: "/",
@@ -13,19 +15,19 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <App />,
+        element: <HomePage />, // Đây là trang chủ
       },
       {
         path: "san-pham",
-        element: <div className="p-20 text-center">Trang Sản phẩm</div>,
+        element: <ProductList />, // Đây là trang danh sách sản phẩm
       },
       {
         path: "ve-chung-toi",
-        element: <div className="p-20 text-center">Về chúng tôi</div>,
+        element: <AboutPage />,
       },
       {
         path: "lien-he",
-        element: <div className="p-20 text-center">Liên hệ</div>,
+        element: <ContactPage />,
       },
     ],
   },
