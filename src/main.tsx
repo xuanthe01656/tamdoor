@@ -24,6 +24,13 @@ import AdminProductList from './pages/admin/ProductList'
 import ProductAdd from './pages/admin/ProductAdd'
 import Settings from './pages/admin/Settings'
 import ProductEdit from './pages/admin/ProductEdit';
+import ContactList from './pages/admin/ContactList';
+import UserList from './pages/admin/UserList';
+// --- AUTH IMPORTS ---
+import { AuthProvider } from './contexts/AuthContext';
+import LoginPage from './pages/auth/LoginPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import AdminRoute from './components/auth/AdminRoute';
 
 const router = createBrowserRouter([
   // === ROUTE CHO KHÁCH (CLIENT) ===
@@ -56,24 +63,37 @@ const router = createBrowserRouter([
       { path: "cau-hoi-thuong-gap", element: <FAQPage /> },
     ],
   },
-
+  // === ROUTE ĐĂNG NHẬP (MỚI) ===
+  {
+    path: "/login",
+    element: <LoginPage />
+  },
   // === ROUTE CHO ADMIN ===
   {
-    path: "/admin",
-    element: <AdminLayout />, // Layout Admin nằm trong components/layout
+    element: <ProtectedRoute />, 
     children: [
       {
-        index: true, 
-        element: <Dashboard /> 
-      }, 
-      {
-        path: "products",
-        element: <AdminProductList /> 
-      },
-      { path: "products/new", element: <ProductAdd /> },
-      { path: "products/edit/:id", element: <ProductEdit /> },
-      { path: "settings", element: <Settings /> },
-    ],
+        path: "/admin",
+        element: <AdminLayout />,
+        children: [
+          // A. NHỮNG TRANG STAFF CŨNG ĐƯỢC VÀO
+          { index: true, element: <Dashboard /> }, 
+          { path: "products", element: <AdminProductList /> },
+          { path: "products/new", element: <ProductAdd /> },
+          { path: "products/edit/:id", element: <ProductEdit /> },
+          { path: "contacts", element: <ContactList /> },
+
+          // B. NHỮNG TRANG CHỈ ADMIN MỚI ĐƯỢC VÀO (Lồng thêm AdminRoute)
+          {
+            element: <AdminRoute />, // 🔒 Cửa bảo vệ lớp 2
+            children: [
+               { path: "users", element: <UserList /> },  // 👈 Staff không vào được nữa
+               { path: "settings", element: <Settings /> } // 👈 Staff cũng không nên chỉnh cấu hình
+            ]
+          }
+        ],
+      }
+    ]
   },
 ]);
 
@@ -81,7 +101,9 @@ const rootElement = document.getElementById("root") as HTMLElement;
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </StrictMode>
   );
 }

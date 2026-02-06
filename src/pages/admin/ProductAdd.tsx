@@ -20,7 +20,7 @@ const ProductAdd = () => {
 
   // --- 1. STATE DỮ LIỆU CẤU HÌNH ---
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
-  const [brandOptions, setBrandOptions] = useState<string[]>([]); // ✅ Đã được sử dụng
+  const [brandOptions, setBrandOptions] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -77,10 +77,8 @@ const ProductAdd = () => {
     setFormData({ ...formData, [name]: name === 'price' ? Number(value) : value });
   };
 
-  // ✅ HÀM MỚI: Xử lý khi chọn Thương hiệu từ Dropdown
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedBrand = e.target.value;
-    // Cập nhật vào mảng specs (Tìm dòng có key là 'Thương hiệu')
     setSpecs(prevSpecs => prevSpecs.map(spec => 
         spec.key === 'Thương hiệu' ? { ...spec, value: selectedBrand } : spec
     ));
@@ -96,7 +94,7 @@ const ProductAdd = () => {
     if (url) setFormData(prev => ({ ...prev, image: url }));
   };
 
-  // --- B. IMPORT EXCEL (Giữ nguyên logic) ---
+  // --- B. IMPORT EXCEL ---
   const handleExcelSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -165,7 +163,7 @@ const ProductAdd = () => {
             price: item['Giá'] || 0,
             category: item['Danh mục'] || (categoryOptions[0] || 'Khác'),
             type: (item['Loại'] && item['Loại'].toLowerCase().includes('phụ kiện')) ? 'accessory' : 'door',
-            image: imageUrl || 'https://placehold.co/400x600?text=No+Image',
+            image: imageUrl || 'https://via.placeholder.com/400x600?text=No+Image',
             description: item['Mô tả'] || '',
             features: item['Đặc điểm'] ? item['Đặc điểm'].toString().split(';') : [],
             specifications: parsedSpecs
@@ -203,13 +201,15 @@ const ProductAdd = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-100 mb-20">
+    // DARK MODE: bg-gray-800 border-gray-700
+    <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 mb-20 transition-colors duration-300">
       
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-4 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-b dark:border-gray-700 pb-4 gap-4">
         <div>
-           <h1 className="text-2xl font-bold text-gray-800">Thêm sản phẩm mới</h1>
-           <p className="text-sm text-gray-500">Nhập thủ công hoặc Import Excel + Ảnh hàng loạt</p>
+           {/* DARK MODE: text-white */}
+           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Thêm sản phẩm mới</h1>
+           <p className="text-sm text-gray-500 dark:text-gray-400">Nhập thủ công hoặc Import Excel + Ảnh hàng loạt</p>
         </div>
         
         <div className="flex gap-3 items-center">
@@ -217,7 +217,7 @@ const ProductAdd = () => {
             <input type="file" multiple accept="image/*" className="hidden" ref={imageFolderInputRef} onChange={handleImagesSelectAndUpload} />
 
             {loading && importStatus && (
-                <span className="text-sm text-blue-600 font-bold animate-pulse">{importStatus}</span>
+                <span className="text-sm text-blue-600 dark:text-blue-400 font-bold animate-pulse">{importStatus}</span>
             )}
 
             {!loading && (
@@ -231,14 +231,14 @@ const ProductAdd = () => {
                              <button onClick={() => imageFolderInputRef.current?.click()} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-sm transition-all shadow-sm animate-bounce">
                                 📂 Bước 2: Chọn Folder Ảnh
                             </button>
-                            <button onClick={() => { setIsExcelReady(false); setExcelData([]); }} className="text-red-500 text-sm hover:underline">
+                            <button onClick={() => { setIsExcelReady(false); setExcelData([]); }} className="text-red-500 hover:text-red-400 text-sm hover:underline">
                                 (Hủy)
                             </button>
                         </div>
                     )}
                 </>
             )}
-            <button onClick={() => navigate('/admin/products')} className="text-gray-500 hover:text-gray-700 font-medium px-2">Quay lại</button>
+            <button onClick={() => navigate('/admin/products')} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white font-medium px-2">Quay lại</button>
         </div>
       </div>
       
@@ -247,44 +247,85 @@ const ProductAdd = () => {
         
         <div className="lg:col-span-2 space-y-8">
           <div className="space-y-4">
-            <h3 className="font-bold text-gray-800 border-l-4 border-blue-500 pl-3">A. Thông tin chung</h3>
-            <div><label className="block text-sm font-bold text-gray-700 mb-2">Tên sản phẩm <span className="text-red-500">*</span></label><input type="text" name="name" required className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none" placeholder="VD: Cửa nhựa Composite..." value={formData.name} onChange={handleChange} /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-2">Mô tả ngắn</label><textarea name="description" rows={3} onChange={handleChange} value={formData.description} className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none"></textarea></div>
+            <h3 className="font-bold text-gray-800 dark:text-white border-l-4 border-blue-500 pl-3">A. Thông tin chung</h3>
+            
+            {/* INPUT FIELDS: dark:bg-gray-700 dark:border-gray-600 dark:text-white */}
+            <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Tên sản phẩm <span className="text-red-500">*</span></label>
+                <input type="text" name="name" required className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 outline-none dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="VD: Cửa nhựa Composite..." value={formData.name} onChange={handleChange} />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mô tả ngắn</label>
+                <textarea name="description" rows={3} onChange={handleChange} value={formData.description} className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 outline-none dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
           </div>
 
-          <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
-             <div className="flex justify-between mb-2"><h3 className="font-bold">B. Đặc điểm</h3><button type="button" onClick={addFeatureRow} className="text-blue-600 font-bold text-sm">+ Thêm</button></div>
-             {features.map((feat, i) => (<div key={i} className="flex gap-2 mb-2"><input value={feat} onChange={e=>handleFeatureChange(i,e.target.value)} className="flex-1 border p-2 rounded text-sm"/><button type="button" onClick={()=>removeFeatureRow(i)} className="text-red-500">✕</button></div>))}
+          {/* FEATURES BLOCK: dark:bg-blue-900/20 dark:border-blue-800 */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-xl border border-blue-100 dark:border-blue-800">
+             <div className="flex justify-between mb-2">
+                 <h3 className="font-bold dark:text-blue-100">B. Đặc điểm</h3>
+                 <button type="button" onClick={addFeatureRow} className="text-blue-600 dark:text-blue-400 font-bold text-sm">+ Thêm</button>
+             </div>
+             {features.map((feat, i) => (
+                 <div key={i} className="flex gap-2 mb-2">
+                     <input value={feat} onChange={e=>handleFeatureChange(i,e.target.value)} className="flex-1 border dark:border-gray-600 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
+                     <button type="button" onClick={()=>removeFeatureRow(i)} className="text-red-500 dark:text-red-400">✕</button>
+                 </div>
+             ))}
           </div>
 
-          <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-             <div className="flex justify-between mb-2"><h3 className="font-bold">C. Thông số</h3><button type="button" onClick={addSpecRow} className="text-gray-600 font-bold text-sm">+ Thêm</button></div>
-             {specs.map((s, i) => (<div key={i} className="flex gap-2 mb-2"><input value={s.key} onChange={e=>handleSpecChange(i,'key',e.target.value)} placeholder="Tên" className="w-1/3 border p-2 rounded text-sm"/><input value={s.value} onChange={e=>handleSpecChange(i,'value',e.target.value)} placeholder="Giá trị" className="flex-1 border p-2 rounded text-sm"/><button type="button" onClick={()=>removeSpecRow(i)} className="text-red-500">✕</button></div>))}
+          {/* SPECS BLOCK: dark:bg-gray-700/30 dark:border-gray-600 */}
+          <div className="bg-gray-50 dark:bg-gray-700/30 p-5 rounded-xl border border-gray-200 dark:border-gray-600">
+             <div className="flex justify-between mb-2">
+                 <h3 className="font-bold dark:text-gray-200">C. Thông số</h3>
+                 <button type="button" onClick={addSpecRow} className="text-gray-600 dark:text-gray-300 font-bold text-sm">+ Thêm</button>
+             </div>
+             {specs.map((s, i) => (
+                 <div key={i} className="flex gap-2 mb-2">
+                     <input value={s.key} onChange={e=>handleSpecChange(i,'key',e.target.value)} placeholder="Tên" className="w-1/3 border dark:border-gray-600 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
+                     <input value={s.value} onChange={e=>handleSpecChange(i,'value',e.target.value)} placeholder="Giá trị" className="flex-1 border dark:border-gray-600 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
+                     <button type="button" onClick={()=>removeSpecRow(i)} className="text-red-500 dark:text-red-400">✕</button>
+                 </div>
+             ))}
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm sticky top-6">
-            <h3 className="font-bold text-gray-800 border-b pb-2 mb-4">Thiết lập</h3>
+          {/* RIGHT COLUMN: dark:bg-gray-800 dark:border-gray-700 */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm sticky top-6">
+            <h3 className="font-bold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2 mb-4">Thiết lập</h3>
+            
             <div className="mb-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Loại sản phẩm</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Loại sản phẩm</label>
               <div className="flex gap-2 mb-3">
-                 <label className={`flex-1 p-2 border rounded text-center cursor-pointer ${formData.type==='door'?'bg-blue-50 border-blue-500 text-blue-700 font-bold':''}`}><input type="radio" name="type" value="door" checked={formData.type==='door'} onChange={handleChange} className="hidden"/>🚪 Cửa</label>
-                 <label className={`flex-1 p-2 border rounded text-center cursor-pointer ${formData.type==='accessory'?'bg-purple-50 border-purple-500 text-purple-700 font-bold':''}`}><input type="radio" name="type" value="accessory" checked={formData.type==='accessory'} onChange={handleChange} className="hidden"/>🔧 Phụ kiện</label>
+                 <label className={`flex-1 p-2 border dark:border-gray-600 rounded text-center cursor-pointer 
+                    ${formData.type==='door'
+                        ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-400 font-bold'
+                        : 'text-gray-600 dark:text-gray-400 dark:bg-gray-700'
+                    }`}>
+                        <input type="radio" name="type" value="door" checked={formData.type==='door'} onChange={handleChange} className="hidden"/>🚪 Cửa
+                 </label>
+                 <label className={`flex-1 p-2 border dark:border-gray-600 rounded text-center cursor-pointer 
+                    ${formData.type==='accessory'
+                        ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-500 text-purple-700 dark:text-purple-400 font-bold'
+                        : 'text-gray-600 dark:text-gray-400 dark:bg-gray-700'
+                    }`}>
+                        <input type="radio" name="type" value="accessory" checked={formData.type==='accessory'} onChange={handleChange} className="hidden"/>🔧 Phụ kiện
+                 </label>
               </div>
             </div>
 
             <div className="mb-4">
-               <label className="block text-sm font-bold text-gray-700 mb-2">Danh mục</label>
-               <select name="category" value={formData.category} onChange={handleChange} className="w-full border p-2 rounded">{categoryOptions.map((c,i)=><option key={i} value={c}>{c}</option>)}</select>
+               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Danh mục</label>
+               <select name="category" value={formData.category} onChange={handleChange} className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded dark:bg-gray-700 dark:text-white">
+                   {categoryOptions.map((c,i)=><option key={i} value={c}>{c}</option>)}
+               </select>
             </div>
 
-            {/*THÊM SELECT BRAND VÀO ĐÂY */}
             <div className="mb-4">
-               <label className="block text-sm font-bold text-gray-700 mb-2">Thương hiệu</label>
+               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Thương hiệu</label>
                <select 
-                 className="w-full border p-2 rounded"
-                 // Tìm giá trị 'Thương hiệu' hiện tại trong specs để binding
+                 className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded dark:bg-gray-700 dark:text-white"
                  value={specs.find(s => s.key === 'Thương hiệu')?.value || ''}
                  onChange={handleBrandChange}
                >
@@ -293,23 +334,31 @@ const ProductAdd = () => {
                </select>
             </div>
 
-            <div className="mb-4"><label className="block text-sm font-bold text-gray-700 mb-2">Giá bán (VNĐ)</label><input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full border p-2 rounded font-bold text-lg" placeholder="0"/></div>
+            <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Giá bán (VNĐ)</label>
+                <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded font-bold text-lg dark:bg-gray-700 dark:text-white" placeholder="0"/>
+            </div>
             
             <div className="mb-6">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Hình ảnh sản phẩm</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Hình ảnh sản phẩm</label>
               <div className="relative group">
                  <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleImageFileChange} disabled={uploadingImg}/>
-                 <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-all ${uploadingImg ? 'bg-gray-100' : 'border-blue-300 bg-blue-50 hover:bg-blue-100'}`}>
-                    {uploadingImg ? <span className="text-blue-600 font-bold animate-pulse">⏳ Đang tải...</span> : <span className="text-blue-600 font-bold">☁️ Chọn ảnh từ máy</span>}
+                 {/* UPLOAD BOX: dark:bg-blue-900/20 dark:border-blue-700 */}
+                 <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-all 
+                    ${uploadingImg 
+                        ? 'bg-gray-100 dark:bg-gray-700' 
+                        : 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40'
+                    }`}>
+                    {uploadingImg ? <span className="text-blue-600 dark:text-blue-400 font-bold animate-pulse">⏳ Đang tải...</span> : <span className="text-blue-600 dark:text-blue-400 font-bold">☁️ Chọn ảnh từ máy</span>}
                  </div>
               </div>
-              <input type="text" name="image" value={formData.image} onChange={handleChange} className="w-full border p-2 rounded text-sm mt-2" placeholder="Hoặc dán link ảnh..."/>
-              <div className="mt-2 aspect-[3/4] bg-gray-100 rounded border flex items-center justify-center overflow-hidden relative">
-                {formData.image ? <img src={formData.image} alt="Preview" className="w-full h-full object-cover"/> : <span className="text-gray-400 text-xs">Preview</span>}
+              <input type="text" name="image" value={formData.image} onChange={handleChange} className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded text-sm mt-2 dark:bg-gray-700 dark:text-white" placeholder="Hoặc dán link ảnh..."/>
+              <div className="mt-2 aspect-[3/4] bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 flex items-center justify-center overflow-hidden relative">
+                {formData.image ? <img src={formData.image} alt="Preview" className="w-full h-full object-cover"/> : <span className="text-gray-400 dark:text-gray-500 text-xs">Preview</span>}
               </div>
             </div>
 
-            <button type="submit" disabled={loading || uploadingImg} className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50">
+            <button type="submit" disabled={loading || uploadingImg} className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 shadow-lg">
               {loading ? 'Đang xử lý...' : '💾 ĐĂNG SẢN PHẨM'}
             </button>
           </div>

@@ -13,7 +13,9 @@ import {
   updateDoc,
   serverTimestamp 
 } from 'firebase/firestore';
-// Lưu ý: Đã xóa import firebase/storage vì dùng Cloudinary
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword, signOut,sendPasswordResetEmail } from "firebase/auth";
+import { firebaseConfig } from "../config/firebase";
 import { db } from '../config/firebase';
 
 import { Door } from '../interfaces/door';
@@ -391,6 +393,129 @@ export const doorService = {
       return true;
     } catch (error) {
       console.error("Lỗi gửi liên hệ:", error);
+      return false;
+    }
+  },
+  // ==========================================
+  // F. NHÓM API QUẢN LÝ LIÊN HỆ (ADMIN)
+  // ==========================================
+
+  // 23. Lấy danh sách liên hệ (Sắp xếp mới nhất trước)
+  getAllContacts: async () => {
+    try {
+      const q = query(collection(db, 'contacts'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Lỗi lấy danh sách liên hệ:", error);
+      return [];
+    }
+  },
+
+  // 24. Cập nhật trạng thái (VD: Đã tư vấn)
+  updateContactStatus: async (id: string, status: 'new' | 'contacted' | 'spam') => {
+    try {
+      const docRef = doc(db, 'contacts', id);
+      await updateDoc(docRef, { status });
+      return true;
+    } catch (error) {
+      console.error("Lỗi update status:", error);
+      return false;
+    }
+  },
+
+  // 25. Xóa liên hệ
+  deleteContact: async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'contacts', id));
+      return true;
+    } catch (error) {
+      console.error("Lỗi xóa liên hệ:", error);
+      return false;
+    }
+  },
+  // ==========================================
+  // G. NHÓM API QUẢN LÝ USER (ADMIN ONLY)
+  // ==========================================
+
+  // 26. Lấy danh sách nhân viên
+  getAllUsers: async () => {
+    try {
+      const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Lỗi lấy users:", error);
+      return [];
+    }
+  },
+
+  // 27. Tạo User mới (MÀ KHÔNG BỊ LOGOUT ADMIN)
+  createUser: async (userData: { email: string; pass: string; name: string; role: string }) => {
+    try {
+      // 1. Tạo một App phụ (Secondary App)
+      const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+      const secondaryAuth = getAuth(secondaryApp);
+
+      // 2. Tạo user trên App phụ đó
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, userData.email, userData.pass);
+      const newUser = userCredential.user;
+
+      // 3. Lưu thông tin vào Firestore (Dùng db chính)
+      await setDoc(doc(db, "users", newUser.uid), {
+        email: userData.email,
+        name: userData.name,
+        role: userData.role, // 'admin' hoặc 'staff'
+        createdAt: serverTimestamp()
+      });
+
+      // 4. Đăng xuất user mới khỏi App phụ (để dọn dẹp)
+      await signOut(secondaryAuth);
+      
+      return true;
+    } catch (error: any) {
+      console.error("Lỗi tạo user:", error);
+      alert("Lỗi: " + error.message); // Hiển thị lỗi Firebase (VD: Email đã tồn tại)
+      return false;
+    }
+  },
+
+  // 28. Xóa User (Chỉ xóa quyền truy cập trong Firestore)
+  // Lưu ý: Không xóa được Login trong Auth nếu không có Backend, 
+  // nhưng xóa trong Firestore là họ cũng không vào được Admin nữa.
+  deleteUser: async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'users', id));
+      return true;
+    } catch (error) {
+      console.error("Lỗi xóa user:", error);
+      return false;
+    }
+  },
+  // 29. Cập nhật thông tin User (Tên, Quyền)
+  updateUser: async (uid: string, data: { name: string; role: string }) => {
+    try {
+      const docRef = doc(db, 'users', uid);
+      await updateDoc(docRef, {
+        name: data.name,
+        role: data.role
+      });
+      return true;
+    } catch (error) {
+      console.error("Lỗi update user:", error);
+      return false;
+    }
+  },
+
+  // 30. Gửi Email đặt lại mật khẩu
+  sendPasswordReset: async (email: string) => {
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+      return true;
+    } catch (error: any) {
+      console.error("Lỗi gửi mail reset:", error);
+      alert("Lỗi: " + error.message);
       return false;
     }
   }
