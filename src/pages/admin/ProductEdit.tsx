@@ -202,7 +202,7 @@ const ProductEdit = () => {
               <label className="block text-sm font-bold text-gray-700 mb-2">Link hình ảnh</label>
               <input type="text" name="image" required value={formData.image} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 outline-none text-sm" />
               <div className="mt-3 aspect-[3/4] bg-gray-100 rounded border border-gray-300 flex items-center justify-center overflow-hidden relative">
-                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300?text=Lỗi+Link'; }}/>
+                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=Lỗi+link'; }}/>
               </div>
             </div>
 

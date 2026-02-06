@@ -16,12 +16,11 @@ const ProductAdd = () => {
   // State Import Excel
   const [excelData, setExcelData] = useState<any[]>([]); 
   const [importStatus, setImportStatus] = useState(""); 
-  // 👇 THÊM STATE NÀY ĐỂ QUẢN LÝ BƯỚC
   const [isExcelReady, setIsExcelReady] = useState(false);
 
   // --- 1. STATE DỮ LIỆU CẤU HÌNH ---
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
-  const [brandOptions, setBrandOptions] = useState<string[]>([]);
+  const [brandOptions, setBrandOptions] = useState<string[]>([]); // ✅ Đã được sử dụng
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -59,13 +58,14 @@ const ProductAdd = () => {
   const [features, setFeatures] = useState<string[]>(['Chống nước tuyệt đối 100%', 'Không cong vênh, co ngót']);
   const [specs, setSpecs] = useState<ProductSpecification[]>(DOOR_SPECS_TEMPLATE);
 
-  // Auto-select Category & Logic Template
+  // Auto-select Category
   useEffect(() => {
     if (categoryOptions.length > 0 && !formData.category) {
       setFormData(prev => ({ ...prev, category: categoryOptions[0] }));
     }
   }, [categoryOptions]);
 
+  // Auto-switch Template
   useEffect(() => {
     if (formData.type === 'door') setSpecs(DOOR_SPECS_TEMPLATE);
     else setSpecs(ACCESSORY_SPECS_TEMPLATE);
@@ -75,6 +75,15 @@ const ProductAdd = () => {
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: name === 'price' ? Number(value) : value });
+  };
+
+  // ✅ HÀM MỚI: Xử lý khi chọn Thương hiệu từ Dropdown
+  const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedBrand = e.target.value;
+    // Cập nhật vào mảng specs (Tìm dòng có key là 'Thương hiệu')
+    setSpecs(prevSpecs => prevSpecs.map(spec => 
+        spec.key === 'Thương hiệu' ? { ...spec, value: selectedBrand } : spec
+    ));
   };
 
   // --- A. UPLOAD ẢNH ĐƠN ---
@@ -87,13 +96,10 @@ const ProductAdd = () => {
     if (url) setFormData(prev => ({ ...prev, image: url }));
   };
 
-  // --- B. IMPORT EXCEL ---
-
-  // B1. Đọc file Excel
+  // --- B. IMPORT EXCEL (Giữ nguyên logic) ---
   const handleExcelSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (evt) => {
       const bstr = evt.target?.result;
@@ -101,13 +107,9 @@ const ProductAdd = () => {
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       const data = XLSX.utils.sheet_to_json(ws);
-      
       if (data.length > 0) {
         setExcelData(data);
-        setIsExcelReady(true); // Đánh dấu là đã có Excel
-        
-        // ⚠️ BỎ WINDOW.CONFIRM Ở ĐÂY ĐỂ TRÁNH LỖI TRÌNH DUYỆT
-        // Thay vào đó, hiển thị thông báo nhẹ và đổi nút bấm trên giao diện
+        setIsExcelReady(true);
         alert(`✅ Đã đọc thành công ${data.length} dòng dữ liệu.\n👇 Bấm nút màu cam "CHỌN ẢNH" bên dưới để tiếp tục.`);
       } else {
         alert("File Excel trống!");
@@ -116,7 +118,6 @@ const ProductAdd = () => {
     reader.readAsBinaryString(file);
   };
 
-  // B2. Chọn ảnh và Upload
   const handleImagesSelectAndUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -126,7 +127,6 @@ const ProductAdd = () => {
     setImportStatus("Đang khởi tạo...");
 
     const finalProducts: any[] = [];
-
     for (let i = 0; i < excelData.length; i++) {
         const item: any = excelData[i];
         
@@ -174,12 +174,10 @@ const ProductAdd = () => {
 
     setImportStatus("Đang lưu vào Database...");
     const result = await doorService.addMultipleProducts(finalProducts);
-    
     setLoading(false);
     setImportStatus("");
     setExcelData([]);
-    setIsExcelReady(false); // Reset trạng thái
-    
+    setIsExcelReady(false);
     alert(`✅ Hoàn tất!\n- Thành công: ${result.successCount}\n- Thất bại: ${result.failCount}`);
     navigate('/admin/products');
   };
@@ -207,7 +205,7 @@ const ProductAdd = () => {
   return (
     <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-100 mb-20">
       
-      {/* HEADER & IMPORT ACTIONS */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-4 gap-4">
         <div>
            <h1 className="text-2xl font-bold text-gray-800">Thêm sản phẩm mới</h1>
@@ -215,51 +213,36 @@ const ProductAdd = () => {
         </div>
         
         <div className="flex gap-3 items-center">
-            {/* Input Ẩn */}
             <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleExcelSelect} />
             <input type="file" multiple accept="image/*" className="hidden" ref={imageFolderInputRef} onChange={handleImagesSelectAndUpload} />
 
-            {/* HIỂN THỊ TRẠNG THÁI LOADING */}
             {loading && importStatus && (
                 <span className="text-sm text-blue-600 font-bold animate-pulse">{importStatus}</span>
             )}
 
-            {/* NÚT CHUYỂN ĐỔI TRẠNG THÁI (FIX LỖI TRÌNH DUYỆT) */}
             {!loading && (
                 <>
                     {!isExcelReady ? (
-                        // BƯỚC 1: CHỌN EXCEL
-                        <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-sm transition-all shadow-sm"
-                        >
+                        <button onClick={() => fileInputRef.current?.click()} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-sm transition-all shadow-sm">
                             📥 Bước 1: Nhập Excel
                         </button>
                     ) : (
-                        // BƯỚC 2: CHỌN ẢNH (CHỈ HIỆN SAU KHI ĐÃ CÓ EXCEL)
                         <div className="flex gap-2">
-                             <button 
-                                onClick={() => imageFolderInputRef.current?.click()}
-                                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-sm transition-all shadow-sm animate-bounce"
-                            >
+                             <button onClick={() => imageFolderInputRef.current?.click()} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-sm transition-all shadow-sm animate-bounce">
                                 📂 Bước 2: Chọn Folder Ảnh
                             </button>
-                            <button 
-                                onClick={() => { setIsExcelReady(false); setExcelData([]); }}
-                                className="text-red-500 text-sm hover:underline"
-                            >
+                            <button onClick={() => { setIsExcelReady(false); setExcelData([]); }} className="text-red-500 text-sm hover:underline">
                                 (Hủy)
                             </button>
                         </div>
                     )}
                 </>
             )}
-            
             <button onClick={() => navigate('/admin/products')} className="text-gray-500 hover:text-gray-700 font-medium px-2">Quay lại</button>
         </div>
       </div>
       
-      {/* FORM THỦ CÔNG (Phần dưới giữ nguyên) */}
+      {/* FORM */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <div className="lg:col-span-2 space-y-8">
@@ -284,13 +267,32 @@ const ProductAdd = () => {
           <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm sticky top-6">
             <h3 className="font-bold text-gray-800 border-b pb-2 mb-4">Thiết lập</h3>
             <div className="mb-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Loại & Danh mục</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Loại sản phẩm</label>
               <div className="flex gap-2 mb-3">
                  <label className={`flex-1 p-2 border rounded text-center cursor-pointer ${formData.type==='door'?'bg-blue-50 border-blue-500 text-blue-700 font-bold':''}`}><input type="radio" name="type" value="door" checked={formData.type==='door'} onChange={handleChange} className="hidden"/>🚪 Cửa</label>
                  <label className={`flex-1 p-2 border rounded text-center cursor-pointer ${formData.type==='accessory'?'bg-purple-50 border-purple-500 text-purple-700 font-bold':''}`}><input type="radio" name="type" value="accessory" checked={formData.type==='accessory'} onChange={handleChange} className="hidden"/>🔧 Phụ kiện</label>
               </div>
-              <select name="category" value={formData.category} onChange={handleChange} className="w-full border p-2 rounded">{categoryOptions.map((c,i)=><option key={i} value={c}>{c}</option>)}</select>
             </div>
+
+            <div className="mb-4">
+               <label className="block text-sm font-bold text-gray-700 mb-2">Danh mục</label>
+               <select name="category" value={formData.category} onChange={handleChange} className="w-full border p-2 rounded">{categoryOptions.map((c,i)=><option key={i} value={c}>{c}</option>)}</select>
+            </div>
+
+            {/*THÊM SELECT BRAND VÀO ĐÂY */}
+            <div className="mb-4">
+               <label className="block text-sm font-bold text-gray-700 mb-2">Thương hiệu</label>
+               <select 
+                 className="w-full border p-2 rounded"
+                 // Tìm giá trị 'Thương hiệu' hiện tại trong specs để binding
+                 value={specs.find(s => s.key === 'Thương hiệu')?.value || ''}
+                 onChange={handleBrandChange}
+               >
+                 <option value="">-- Chọn thương hiệu --</option>
+                 {brandOptions.map((b, i) => <option key={i} value={b}>{b}</option>)}
+               </select>
+            </div>
+
             <div className="mb-4"><label className="block text-sm font-bold text-gray-700 mb-2">Giá bán (VNĐ)</label><input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full border p-2 rounded font-bold text-lg" placeholder="0"/></div>
             
             <div className="mb-6">

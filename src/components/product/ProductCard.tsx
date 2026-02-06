@@ -26,7 +26,7 @@ const ProductCard = ({ item, onOpenModal }: ProductCardProps) => {
             src={item.image} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
             alt={item.name}
-            onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x600?text=No+Image'; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image'; }}
           />
           
           {/* Tag Category */}
