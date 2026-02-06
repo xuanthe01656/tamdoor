@@ -1,22 +1,58 @@
 import { useEffect, useState } from 'react';
-import { COMPANY_INFO } from '../../data/companyInfo';
+import { doorService } from '../../services/doorService';
+import { WebsiteInfo } from '../../interfaces/door';
 
 const ContactPage = () => {
-  // Scroll lên đầu trang
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  // State lưu thông tin liên hệ động
+  const [info, setInfo] = useState<WebsiteInfo>({
+    companyName: 'Đang tải...',
+    address: 'Đang cập nhật địa chỉ...',
+    phone: '...',
+    email: '...',
+    zalo: '',
+    facebook: '',
+    mapIframe: '',
+    taxId: ''
+  });
 
+  // State form gửi liên hệ
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => { 
+    window.scrollTo(0, 0); 
+    
+    // Load thông tin từ Firebase
+    const fetchInfo = async () => {
+        const settings = await doorService.getSettings();
+        if (settings.websiteInfo) {
+            setInfo(settings.websiteInfo);
+        }
+    };
+    fetchInfo();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Giả lập gửi API (Sau này sẽ thay bằng API thật)
-    setTimeout(() => {
-      alert(`Cảm ơn ${formData.name}! Chúng tôi đã nhận được thông tin và sẽ liên hệ số ${formData.phone} sớm nhất.`);
-      setIsSubmitting(false);
+
+    // Gọi API thật
+    const success = await doorService.sendContactRequest({
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      message: formData.message
+    });
+
+    setIsSubmitting(false);
+
+    if (success) {
+      alert(`✅ Gửi thành công!\nCảm ơn ${formData.name}, chúng tôi sẽ liên hệ lại số ${formData.phone} trong thời gian sớm nhất.`);
+      // Reset form sau khi gửi xong
       setFormData({ name: '', phone: '', email: '', message: '' });
-    }, 1500);
+    } else {
+      alert("❌ Có lỗi xảy ra. Vui lòng thử lại hoặc gọi trực tiếp Hotline.");
+    }
   };
 
   return (
@@ -36,7 +72,7 @@ const ContactPage = () => {
       <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* 2. INFO CARDS (Cột Trái - Load từ Config) */}
+          {/* 2. INFO CARDS (Cột Trái - Load từ Firebase) */}
           <div className="lg:col-span-1 space-y-6">
             
             {/* Card Address */}
@@ -46,7 +82,7 @@ const ContactPage = () => {
               </div>
               <h3 className="font-bold text-gray-900 text-lg mb-2">Địa chỉ Showroom</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                {COMPANY_INFO.address}
+                {info.address || 'Đang cập nhật...'}
               </p>
             </div>
 
@@ -56,22 +92,22 @@ const ContactPage = () => {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
               </div>
               <h3 className="font-bold text-gray-900 text-lg mb-2">Hotline Hỗ Trợ</h3>
-              <a href={`tel:${COMPANY_INFO.hotline.replace(/\s/g, '')}`} className="text-blue-700 font-black text-2xl mb-1 block hover:underline">
-                {COMPANY_INFO.hotline}
+              <a href={`tel:${info.phone.replace(/\s/g, '')}`} className="text-blue-700 font-black text-2xl mb-1 block hover:underline">
+                {info.phone}
               </a>
-              <a href={`mailto:${COMPANY_INFO.email}`} className="text-gray-500 text-sm hover:text-blue-600 transition-colors">
-                {COMPANY_INFO.email}
+              <a href={`mailto:${info.email}`} className="text-gray-500 text-sm hover:text-blue-600 transition-colors">
+                {info.email}
               </a>
             </div>
 
-            {/* Card Time */}
+            {/* Card Time (Giữ tĩnh hoặc thêm vào Admin sau nếu cần) */}
             <div className="bg-white p-8 rounded-2xl shadow-xl border-l-4 border-blue-700 hover:transform hover:translate-x-1 transition-transform duration-300">
               <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-700 mb-4">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </div>
               <h3 className="font-bold text-gray-900 text-lg mb-2">Giờ làm việc</h3>
-              <p className="text-gray-600 text-sm font-medium">{COMPANY_INFO.workingHours.weekdays}</p>
-              <p className="text-gray-500 text-sm mt-1">{COMPANY_INFO.workingHours.sunday}</p>
+              <p className="text-gray-600 text-sm font-medium">Thứ 2 - Thứ 7: 08:00 - 17:30</p>
+              <p className="text-gray-500 text-sm mt-1">Chủ nhật: Hỗ trợ online</p>
             </div>
 
           </div>
@@ -153,18 +189,19 @@ const ContactPage = () => {
               </form>
             </div>
 
-            {/* Map (Google Maps Embed - Đà Nẵng) */}
+            {/* Map (Lấy từ Iframe trong Admin) */}
             <div className="bg-white p-2 rounded-2xl shadow-xl h-[400px] overflow-hidden relative group">
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3833.840742533722!2d108.21908927513364!3d16.06847198461066!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3142183421d00001%3A0x6a00000000000000!2zMTIzIE5ndXnhu4VuIFbEg24gTGluaCwgTmFtIETGsMahbmcsIEjhuqNpIENow6J1LCDEkMOgIE7hurVuZywgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s" 
-                width="100%" 
-                height="100%" 
-                style={{ border: 0, borderRadius: '1rem' }} 
-                allowFullScreen={true} 
-                loading="lazy"
-                title="Google Maps Showroom"
-                className="grayscale group-hover:grayscale-0 transition-all duration-500"
-              ></iframe>
+              {info.mapIframe ? (
+                  <div 
+                    className="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"
+                    dangerouslySetInnerHTML={{ __html: info.mapIframe.replace('width="600"', 'width="100%"').replace('height="450"', 'height="100%"') }} 
+                  />
+              ) : (
+                  <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-400">
+                    <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                    <span>Chưa cập nhật bản đồ</span>
+                  </div>
+              )}
             </div>
 
           </div>

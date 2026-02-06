@@ -379,5 +379,19 @@ export const doorService = {
       }
     }
     return { successCount, failCount };
+  },
+  // 22. Gửi yêu cầu liên hệ (Lưu vào collection 'contacts')
+  sendContactRequest: async (data: { name: string; phone: string; email?: string; message: string }) => {
+    try {
+      await addDoc(collection(db, 'contacts'), {
+        ...data,
+        createdAt: serverTimestamp(), // Lưu thời gian gửi
+        status: 'new' // Mặc định là 'Mới' để Admin biết chưa xử lý
+      });
+      return true;
+    } catch (error) {
+      console.error("Lỗi gửi liên hệ:", error);
+      return false;
+    }
   }
 };

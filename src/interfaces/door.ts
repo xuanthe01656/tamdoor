@@ -33,3 +33,12 @@ export interface SystemSettings {
   brands?: string[];
   websiteInfo?: WebsiteInfo; // Thêm dòng này
 }
+export interface ContactRequest {
+  id?: string;
+  name: string;
+  phone: string;
+  email?: string;
+  message: string;
+  createdAt?: any;
+  status: 'new' | 'contacted' | 'spam';
+}
