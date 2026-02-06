@@ -11,7 +11,8 @@ import {
   setDoc, getDoc,updateDoc,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '../config/firebase'; // Đảm bảo file config này đã đúng
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from '../config/firebase';
 
 import { Door } from '../interfaces/door';
 import { HeroSlide } from '../interfaces/hero';
@@ -315,4 +316,55 @@ export const doorService = {
       return false;
     }
   },
+  // 19. Upload ảnh lên Firebase Storage
+  uploadImage: async (file: File): Promise<string | null> => {
+    
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) {
+      console.error("❌ CHƯA CẤU HÌNH .ENV: Vui lòng kiểm tra file .env");
+      alert("Lỗi cấu hình hệ thống (Thiếu Cloudinary Config)");
+      return null;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+    // Có thể thêm folder để gọn gàng
+
+    formData.append('folder', 'casardoor_products'); 
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Lỗi upload Cloudinary');
+      }
+
+      const data = await response.json();
+      return data.secure_url; // Trả về link ảnh (https://...)
+    } catch (error) {
+      console.error("Lỗi upload ảnh:", error);
+      return null;
+    }
+  },
+
+  // 20. Bulk Insert (Dùng cho Excel)
+  addMultipleProducts: async (products: any[]) => {
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const product of products) {
+      try {
+        // Tái sử dụng hàm addProduct có sẵn để đảm bảo logic (tạo slug, createdAt...)
+        await doorService.addProduct(product);
+        successCount++;
+      } catch (e) {
+        failCount++;
+      }
+    }
+    return { successCount, failCount };
+  }
 };

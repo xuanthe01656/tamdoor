@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import logoFull from '../../assets/logo.png'
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,13 +46,12 @@ const Header = () => {
           <div className="flex justify-between items-center h-20 relative">
             
             {/* LOGO */}
-            <NavLink to="/" className="relative z-[1001] flex items-center space-x-2 shrink-0">
-              <div className="w-9 h-9 bg-blue-700 flex items-center justify-center rounded-lg shadow-lg">
-                <span className="text-white font-black text-lg">C</span>
-              </div>
-              <span className="text-xl font-bold tracking-tighter text-gray-900">
-                CASAR<span className="text-blue-700">DOOR</span>
-              </span>
+            <NavLink to="/" className="relative z-[1001] shrink-0">
+              <img 
+                src={logoFull} 
+                alt="CasarDoor Logo" 
+                className="h-14 md:h-20 w-auto object-contain"
+              />
             </NavLink>
   
             {/* DESKTOP NAV - Có Dropdown */}
