@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { doorService } from '../../services/doorService';
 import { WebsiteInfo } from '../../interfaces/door';
 import { COMPANY_INFO } from '../../data/companyInfo';
+import logoFull from '../../assets/logo.png'
 
 const Footer = () => {
   // State lưu thông tin lấy từ DB
@@ -35,11 +36,9 @@ const Footer = () => {
         {/* 1. BRAND INFO (ĐÃ SỬA: Logo ảnh + Tên đầy đủ) */}
         <div className="space-y-6">
           <Link to="/" className="flex flex-col items-start gap-4 group">
-            
             {/* --- LOGO HÌNH ẢNH --- */}
-            {/* Lưu ý: Bạn cần để file 'logo.png' vào thư mục 'public' của dự án */}
             <img 
-                src="/src/assets/logo.png" 
+                src={logoFull}
                 alt="Logo" 
                 className="h-12 w-auto object-contain" 
                 onError={(e) => {
