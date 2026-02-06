@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade, Pagination, Navigation } from 'swiper/modules';
+import { Link } from 'react-router-dom';
 
 // Import services và interfaces
 import { doorService } from '../../services/doorService';
 import { Door } from '../../interfaces/door';
 import { HeroSlide } from '../../interfaces/hero';
 import ProductModal from '../../components/common/ProductModal';
-import ProductCard from '../../components/product/ProductCard';
+// import ProductCard from '../../components/product/ProductCard'; 
 
 // Interface nội bộ
 interface Advantage { icon: string; title: string; desc: string; }
@@ -65,7 +66,7 @@ const HomePage = () => {
     const loadGridProducts = async () => {
       setIsProductLoading(true);
       try {
-        const result = await doorService.getProductsPaginated(activeTab, pagination.page, 8); // 8 sp/trang
+        const result = await doorService.getProductsPaginated(activeTab, pagination.page, 8); 
         setProducts(result.data);
         setPagination(prev => ({ ...prev, totalPages: result.totalPages }));
       } catch (error) {
@@ -83,6 +84,12 @@ const HomePage = () => {
     setIsModalOpen(true);
   };
 
+  const handleQuickView = (e: React.MouseEvent, product: Door) => {
+    e.preventDefault(); 
+    e.stopPropagation(); 
+    handleOpenModal(product);
+  };
+
   const handleTabChange = (tab: 'door' | 'accessory') => {
     if (activeTab !== tab) {
       setActiveTab(tab);
@@ -96,6 +103,57 @@ const HomePage = () => {
       document.getElementById('product-section')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // --- COMPONENT CON: PRODUCT ITEM ---
+  const ProductItem = ({ item }: { item: Door }) => (
+    <div className="group flex flex-col h-full relative cursor-pointer bg-white">
+      <Link to={`/san-pham/${item.slug}`} className="flex flex-col h-full">
+        {/* Image Box */}
+        <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-6 rounded-lg shadow-sm border border-gray-100 group-hover:shadow-xl transition-all duration-300">
+          <img 
+            src={item.image} 
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+            alt={item.name} 
+            onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image'; }}
+          />
+          
+          <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-sm rounded-sm z-10">
+            {item.category}
+          </div>
+          
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+            <button 
+              className="bg-white text-black px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-blue-700 hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg rounded-sm flex items-center gap-2"
+              onClick={(e) => handleQuickView(e, item)} 
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+              Xem nhanh
+            </button>
+          </div>
+        </div>
+        
+        {/* Info Section */}
+        <div className="flex flex-col flex-grow px-1">
+          <h3 className="font-bold text-lg uppercase leading-tight group-hover:text-blue-700 transition-colors line-clamp-2 min-h-[3rem]">
+            {item.name}
+          </h3>
+          <p className="text-gray-500 text-xs mb-4 line-clamp-2 leading-relaxed mt-2">
+            {item.description}
+          </p>
+          
+          {/* --- SỬA Ở ĐÂY: LUÔN HIỂN THỊ "LIÊN HỆ" --- */}
+          <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Giá bán:</span>
+            
+            {/* Bất kể có giá hay không, đều hiện LIÊN HỆ */}
+            <span className="text-red-500 font-black text-xs uppercase tracking-widest">
+                 LIÊN HỆ
+            </span>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white font-black text-3xl animate-pulse">CASARDOOR...</div>;
 
@@ -143,7 +201,7 @@ const HomePage = () => {
         )}
       </section>
 
-      {/* SECTION 2: SẢN PHẨM NỔI BẬT (SWIPER) */}
+      {/* SECTION 2: SẢN PHẨM NỔI BẬT */}
       <section className="py-20 px-6 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-gray-900 mb-12 text-center">
@@ -166,7 +224,7 @@ const HomePage = () => {
               >
                 {featuredDoors.map((item) => (
                   <SwiperSlide key={item.id} className="h-auto">
-                    <ProductCard item={item} onOpenModal={handleOpenModal} />
+                    <ProductItem item={item} />
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -175,7 +233,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* SECTION 3: HỆ SINH THÁI SẢN PHẨM (GRID + PAGINATION) - PHẦN BỊ THIẾU ĐÃ ĐƯỢC THÊM LẠI */}
+      {/* SECTION 3: HỆ SINH THÁI SẢN PHẨM */}
       <section id="product-section" className="py-24 px-6 max-w-7xl mx-auto min-h-[800px]">
         {/* Header Tabs */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 border-b border-gray-100 pb-8">
@@ -208,7 +266,7 @@ const HomePage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 animate-fadeIn">
             {products.map((item) => (
-              <ProductCard key={item.id} item={item} onOpenModal={handleOpenModal} />
+              <ProductItem key={item.id} item={item} />
             ))}
           </div>
         )}
@@ -243,7 +301,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* SECTION 4: TẠI SAO CHỌN CasarDoor */}
+      {/* SECTION 4: TẠI SAO CHỌN */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-black uppercase text-center mb-16 tracking-tighter">Tại sao chọn CasarDoor?</h2>
@@ -276,7 +334,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* SECTION 6: CTA BANNER */}
+      {/* SECTION 6: CTA */}
       <section className="py-16 md:py-20 px-6 bg-blue-700 text-white text-center">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase mb-6 md:mb-8">
