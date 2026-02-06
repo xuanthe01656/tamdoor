@@ -8,16 +8,18 @@ import {
   deleteDoc, 
   doc,
   addDoc, 
-  setDoc, getDoc,updateDoc,
+  setDoc, 
+  getDoc, 
+  updateDoc,
   serverTimestamp 
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from '../config/firebase';
+// Lưu ý: Đã xóa import firebase/storage vì dùng Cloudinary
+import { db } from '../config/firebase';
 
 import { Door } from '../interfaces/door';
 import { HeroSlide } from '../interfaces/hero';
 
-// Import dữ liệu CMS tĩnh (Banner, FAQ...) từ Mock
+// Import dữ liệu CMS tĩnh
 import { 
   MOCK_SLIDES, 
   MOCK_ADVANTAGES, 
@@ -62,6 +64,24 @@ export interface PaginatedResult<T> {
   total: number;
   currentPage: number;
   totalPages: number;
+}
+
+// --- THÊM MỚI: Interface cho Settings & Footer ---
+export interface WebsiteInfo {
+  companyName: string;
+  address: string;
+  phone: string;
+  zalo: string;
+  email: string;
+  taxId: string;
+  facebook: string;
+  mapIframe: string;
+}
+
+export interface SystemSettings {
+  categories?: string[];
+  brands?: string[];
+  websiteInfo?: WebsiteInfo;
 }
 
 const COLLECTION_NAME = 'products';
@@ -111,12 +131,9 @@ export const doorService = {
     }
   },
 
-  // 4. Lấy sản phẩm nổi bật (ĐÃ SỬA: Lấy MỚI NHẤT thay vì Giá cao)
+  // 4. Lấy sản phẩm nổi bật (MỚI NHẤT)
   getFeaturedProducts: async (limitVal: number = 8): Promise<Door[]> => {
     try {
-      // Logic mới: Lấy sản phẩm Cửa mới nhập về (dựa vào createdAt giảm dần)
-      // Firebase yêu cầu tạo Index cho query này (Type + CreatedAt).
-      // Nếu lỗi, mở Console trình duyệt click link Firebase cung cấp để tạo Index.
       const q = query(
         collection(db, COLLECTION_NAME),
         where("type", "==", "door"),
@@ -127,13 +144,12 @@ export const doorService = {
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Door));
     } catch (error) {
       console.warn("Lỗi Featured (Fallback client sort):", error);
-      
       // Fallback: Nếu chưa có Index, lấy về client rồi tự sort
       const allDocs = await getDocs(collection(db, COLLECTION_NAME));
       return allDocs.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as Door))
         .filter(p => p.type === 'door')
-        .sort((a, b) => b.createdAt - a.createdAt) // Mới nhất lên đầu
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
         .slice(0, limitVal);
     }
   },
@@ -141,7 +157,6 @@ export const doorService = {
   // 5. Tìm kiếm sản phẩm (Client-side search)
   searchProducts: async (keyword: string): Promise<Door[]> => {
     try {
-      // Lấy tất cả về và lọc (Phù hợp với quy mô nhỏ < 2000 sp)
       const snapshot = await getDocs(collection(db, COLLECTION_NAME));
       const allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Door));
       
@@ -156,22 +171,20 @@ export const doorService = {
     }
   },
 
-  // 6. Lấy danh sách phân trang (Pagination - Client Side Logic)
+  // 6. Lấy danh sách phân trang
   getProductsPaginated: async (
     type: 'door' | 'accessory', 
     page: number = 1, 
     limitVal: number = 8
   ): Promise<PaginatedResult<Door>> => {
     try {
-      // 1. Lấy tất cả sp thuộc loại đó
       const q = query(collection(db, COLLECTION_NAME), where("type", "==", type));
       const snapshot = await getDocs(q);
       const allItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Door));
 
-      // 2. Sắp xếp MỚI NHẤT lên đầu (Quan trọng)
-      allItems.sort((a, b) => b.createdAt - a.createdAt);
+      // Sắp xếp MỚI NHẤT lên đầu
+      allItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-      // 3. Tính toán phân trang
       const total = allItems.length;
       const totalPages = Math.ceil(total / limitVal);
       const startIndex = (page - 1) * limitVal;
@@ -179,12 +192,7 @@ export const doorService = {
       
       const data = allItems.slice(startIndex, endIndex);
 
-      return {
-        data,
-        total,
-        currentPage: page,
-        totalPages
-      };
+      return { data, total, currentPage: page, totalPages };
     } catch (error) {
       console.error("Lỗi phân trang:", error);
       return { data: [], total: 0, currentPage: 1, totalPages: 0 };
@@ -192,43 +200,25 @@ export const doorService = {
   },
 
   // ==========================================
-  // B. NHÓM API NỘI DUNG (MOCK DATA - GIỮ NGUYÊN)
+  // B. NHÓM API NỘI DUNG (MOCK DATA)
   // ==========================================
 
-  // 7. Lấy dữ liệu Hero Slides (Banner)
-  getHeroSlides: async (): Promise<HeroSlide[]> => {
-    return Promise.resolve(MOCK_SLIDES);
-  },
-  
-  // 8. Lấy danh sách ưu điểm
-  getAdvantages: async (): Promise<Advantage[]> => {
-    return Promise.resolve(MOCK_ADVANTAGES);
-  },
+  // 7-12: Giữ nguyên Mock Data
+  getHeroSlides: async (): Promise<HeroSlide[]> => Promise.resolve(MOCK_SLIDES),
+  getAdvantages: async (): Promise<Advantage[]> => Promise.resolve(MOCK_ADVANTAGES),
+  getProjects: async (limit: number = 6): Promise<Project[]> => Promise.resolve(MOCK_PROJECTS.slice(0, limit)),
+  getFAQs: async (): Promise<FAQItem[]> => Promise.resolve(MOCK_FAQS),
+  getProcessSteps: async (): Promise<ProcessStep[]> => Promise.resolve(MOCK_PROCESS),
+  getWarrantyPolicy: async (): Promise<WarrantyPolicy> => Promise.resolve(MOCK_WARRANTY),
 
-  // 9. Lấy danh sách công trình thực tế
-  getProjects: async (limit: number = 6): Promise<Project[]> => {
-    return Promise.resolve(MOCK_PROJECTS.slice(0, limit));
-  },
+  // ==========================================
+  // C. NHÓM API QUẢN TRỊ (CRUD)
+  // ==========================================
 
-  // 10. Lấy danh sách câu hỏi thường gặp (FAQ)
-  getFAQs: async (): Promise<FAQItem[]> => {
-    return Promise.resolve(MOCK_FAQS);
-  },
-
-  // 11. Lấy quy trình làm việc
-  getProcessSteps: async (): Promise<ProcessStep[]> => {
-    return Promise.resolve(MOCK_PROCESS);
-  },
-
-  // 12. Lấy chính sách bảo hành
-  getWarrantyPolicy: async (): Promise<WarrantyPolicy> => {
-    return Promise.resolve(MOCK_WARRANTY);
-  },
   // 13. Xóa sản phẩm
   deleteProduct: async (id: string): Promise<boolean> => {
     try {
       if (!id) return false;
-      // Hàm deleteDoc của Firebase cần trỏ đúng vào doc(db, tên_bảng, id_cần_xóa)
       await deleteDoc(doc(db, COLLECTION_NAME, id));
       return true;
     } catch (error) {
@@ -236,17 +226,18 @@ export const doorService = {
       return false;
     }
   },
-  // 14. Thêm sản phẩm mới (MỚI)
+
+  // 14. Thêm sản phẩm mới
   addProduct: async (productData: any): Promise<boolean> => {
     try {
-      // Thêm thời gian tạo để sau này sắp xếp "Mới nhất"
       const dataToSave = {
         ...productData,
-        createdAt: serverTimestamp(), // Lấy giờ server
-        slug: productData.name // Tạm thời lấy tên làm slug (đường dẫn)
+        createdAt: serverTimestamp(),
+        slug: productData.name
             .toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Bỏ dấu tiếng việt
-            .replace(/ /g, "-") // Thay khoảng trắng bằng gạch ngang
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/ /g, "-")
+            .replace(/[^\w-]+/g, "") // Loại bỏ ký tự đặc biệt
       };
 
       await addDoc(collection(db, COLLECTION_NAME), dataToSave);
@@ -256,37 +247,8 @@ export const doorService = {
       return false;
     }
   },
-  // 15. Lấy cấu hình (Danh mục, Thương hiệu...)
-  getSettings: async () => {
-    try {
-      const docRef = doc(db, 'settings', 'general'); // Lưu tất cả vào 1 doc tên 'general'
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        return docSnap.data();
-      } else {
-        // Nếu chưa có thì trả về mặc định
-        return {
-          categories: ["Cửa nhựa Composite", "Cửa thép vân gỗ", "Phụ kiện cửa"],
-          brands: ["Sungyu", "KOS", "Huy Hoàng"]
-        };
-      }
-    } catch (error) {
-      console.error("Lỗi lấy settings:", error);
-      return { categories: [], brands: [] };
-    }
-  },
 
-  // 16. Lưu cấu hình
-  saveSettings: async (data: any) => {
-    try {
-      await setDoc(doc(db, 'settings', 'general'), data, { merge: true });
-      return true;
-    } catch (error) {
-      console.error("Lỗi lưu settings:", error);
-      return false;
-    }
-  },
-  // 17. Lấy chi tiết 1 sản phẩm
+  // 15. Lấy chi tiết 1 sản phẩm theo ID
   getProductById: async (id: string) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
@@ -301,11 +263,10 @@ export const doorService = {
     }
   },
 
-  // 18. Cập nhật sản phẩm
+  // 16. Cập nhật sản phẩm
   updateProduct: async (id: string, data: any) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
-      // Cập nhật trường updatedAt để biết mới sửa
       await updateDoc(docRef, {
         ...data,
         updatedAt: serverTimestamp()
@@ -316,21 +277,74 @@ export const doorService = {
       return false;
     }
   },
-  // 19. Upload ảnh lên Firebase Storage
+
+  // ==========================================
+  // D. NHÓM API CẤU HÌNH & FOOTER (SETTINGS)
+  // ==========================================
+
+  // 17. Lấy Settings (Gộp chung: Danh mục, Thương hiệu, WebsiteInfo)
+  getSettings: async (): Promise<SystemSettings> => {
+    try {
+      const docRef = doc(db, 'settings', 'general');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return docSnap.data() as SystemSettings;
+      } else {
+        // Trả về mặc định nếu chưa có DB
+        return {
+          categories: ["Cửa nhựa Composite", "Cửa thép vân gỗ", "Phụ kiện cửa"],
+          brands: ["Sungyu", "KOS", "Huy Hoàng"],
+          websiteInfo: {} as WebsiteInfo
+        };
+      }
+    } catch (error) {
+      console.error("Lỗi lấy settings:", error);
+      return { categories: [], brands: [], websiteInfo: {} as WebsiteInfo };
+    }
+  },
+
+  // 18. Lưu Danh mục & Thương hiệu
+  saveSettings: async (data: any) => {
+    try {
+      await setDoc(doc(db, 'settings', 'general'), data, { merge: true });
+      return true;
+    } catch (error) {
+      console.error("Lỗi lưu settings:", error);
+      return false;
+    }
+  },
+
+  // 19. Lưu thông tin Website (Footer, Liên hệ...)
+  saveWebsiteInfo: async (info: WebsiteInfo) => {
+    try {
+      const docRef = doc(db, 'settings', 'general');
+      await setDoc(docRef, { websiteInfo: info }, { merge: true });
+      return true;
+    } catch (error) {
+      console.error("Lỗi lưu thông tin web:", error);
+      return false;
+    }
+  },
+
+  // ==========================================
+  // E. NHÓM API UPLOAD & EXCEL
+  // ==========================================
+
+  // 20. Upload ảnh lên Cloudinary (Không cần thẻ Visa)
   uploadImage: async (file: File): Promise<string | null> => {
-    
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
     if (!cloudName || !uploadPreset) {
       console.error("❌ CHƯA CẤU HÌNH .ENV: Vui lòng kiểm tra file .env");
       alert("Lỗi cấu hình hệ thống (Thiếu Cloudinary Config)");
       return null;
     }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', uploadPreset);
-    // Có thể thêm folder để gọn gàng
-
     formData.append('folder', 'casardoor_products'); 
 
     try {
@@ -344,21 +358,20 @@ export const doorService = {
       }
 
       const data = await response.json();
-      return data.secure_url; // Trả về link ảnh (https://...)
+      return data.secure_url;
     } catch (error) {
       console.error("Lỗi upload ảnh:", error);
       return null;
     }
   },
 
-  // 20. Bulk Insert (Dùng cho Excel)
+  // 21. Bulk Insert (Dùng cho Excel)
   addMultipleProducts: async (products: any[]) => {
     let successCount = 0;
     let failCount = 0;
 
     for (const product of products) {
       try {
-        // Tái sử dụng hàm addProduct có sẵn để đảm bảo logic (tạo slug, createdAt...)
         await doorService.addProduct(product);
         successCount++;
       } catch (e) {

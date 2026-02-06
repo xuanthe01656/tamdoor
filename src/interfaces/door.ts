@@ -16,3 +16,20 @@ export interface Door {
   specifications?: ProductSpecification[]; 
   createdAt: number;
 }
+export interface WebsiteInfo {
+  companyName: string;
+  address: string;
+  phone: string;
+  zalo: string;
+  email: string;
+  taxId: string; // MST
+  facebook: string;
+  mapIframe: string; // Link nhúng bản đồ Google
+}
+
+// Cập nhật lại interface Settings cũ (nếu đã có)
+export interface SystemSettings {
+  categories?: string[];
+  brands?: string[];
+  websiteInfo?: WebsiteInfo; // Thêm dòng này
+}
