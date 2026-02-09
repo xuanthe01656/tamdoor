@@ -27,41 +27,6 @@ const LoginPage = () => {
     }
   };
 
-  // 2. HÀM TẠO ADMIN (MỚI - DÙNG 1 LẦN RỒI XÓA)
-  const handleCreateAdmin = async () => {
-    if (!email || !password) {
-      setError("Vui lòng nhập Email và Mật khẩu để tạo Admin!");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Mật khẩu phải từ 6 ký tự trở lên!");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // a. Tạo user trong Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // b. Lưu quyền 'admin' vào Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        email: user.email,
-        name: "Super Admin",
-        role: "admin", // 🔑 QUAN TRỌNG NHẤT: Cấp quyền admin
-        createdAt: new Date()
-      });
-
-      alert("✅ Đã tạo tài khoản Admin thành công! Giờ bạn có thể đăng nhập.");
-      setError('');
-    } catch (err: any) {
-      console.error(err);
-      setError("Lỗi tạo tài khoản: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
