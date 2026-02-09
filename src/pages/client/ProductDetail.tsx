@@ -10,6 +10,7 @@ const ProductDetail = () => {
 
   // Load dữ liệu
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchProduct = async () => {
       if (!slug) return;
       const data = await doorService.getProductBySlug(slug);
@@ -68,14 +69,14 @@ const ProductDetail = () => {
 
             {/* Giá bán */}
             <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-100">
-              {product.price > 0 ? (
+              {/* {product.price > 0 ? (
                 <div className="flex items-end gap-3">
                   <span className="text-3xl font-bold text-blue-700">{product.price.toLocaleString('vi-VN')} đ</span>
                   <span className="text-gray-400 text-sm mb-1">(Giá tham khảo)</span>
                 </div>
-              ) : (
+              ) : ( */}
                 <span className="text-2xl font-bold text-red-500">LIÊN HỆ BÁO GIÁ</span>
-              )}
+              {/* )} */}
             </div>
 
             {/* Đặc điểm nổi bật (Features) */}
