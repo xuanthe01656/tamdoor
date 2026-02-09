@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { doorService, WarrantyPolicy } from '../../services/doorService';
+import { doorService } from '../../services/doorService';
+import { WarrantyPolicy } from '../../interfaces/door';
 
 const WarrantyPage = () => {
   const [policy, setPolicy] = useState<WarrantyPolicy | null>(null);
 
   useEffect(() => { 
     window.scrollTo(0, 0);
+    // Hàm này trong service đã tự động xử lý: Nếu DB có thì lấy, không thì lấy Mock
     doorService.getWarrantyPolicy().then(data => setPolicy(data));
   }, []);
 
-  if (!policy) return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  if (!policy) return <div className="h-screen flex items-center justify-center text-gray-500">Đang tải dữ liệu...</div>;
 
   return (
     <div className="pt-24 pb-20 min-h-screen bg-gray-50">
@@ -37,7 +39,7 @@ const WarrantyPage = () => {
                 </thead>
                 <tbody className="text-sm text-gray-600">
                   {policy.periods.map((p, idx) => (
-                    <tr key={idx} className="border-b border-gray-100 last:border-0">
+                    <tr key={idx} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
                       <td className="p-4 font-bold">{p.product}</td>
                       <td className="p-4 text-blue-600 font-bold">{p.time}</td>
                       <td className="p-4">{p.scope}</td>
@@ -66,7 +68,7 @@ const WarrantyPage = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Link to="/lien-he" className="inline-block px-8 py-3 bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-800 transition-all">
+          <Link to="/lien-he" className="inline-block px-8 py-3 bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-800 transition-all shadow-lg shadow-blue-200 hover:-translate-y-1">
             Gửi yêu cầu bảo hành
           </Link>
         </div>
