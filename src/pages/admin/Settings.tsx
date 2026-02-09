@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { doorService } from '../../services/doorService';
 import { WebsiteInfo, HeroSlide, USP, Project, FAQ, ProcessStep, WarrantyPolicy } from '../../interfaces/door';
 
-// --- MOCK DATA (Dữ liệu mẫu để khởi tạo nếu DB trống) ---
+// --- MOCK DATA ---
 const DEFAULT_SLIDES: HeroSlide[] = [
   { id: '1', title: 'CASAR LUXURY', subtitle: 'CỬA COMPOSITE', description: 'Mô tả mẫu...', image: '', cta: 'Xem ngay', link: '/san-pham' }
 ];
@@ -10,7 +10,7 @@ const DEFAULT_USPS: USP[] = [
   { id: '1', icon: '🛡️', title: 'Chống nước', desc: 'Kháng nước tuyệt đối 100%' }
 ];
 const DEFAULT_PROJECTS: Project[] = [
-  { id: '1', title: 'Biệt thự Vinhome', image: '' }
+  { id: '1', title: 'Biệt thự Vinhome', image: '', link: '' }
 ];
 const DEFAULT_FAQS: FAQ[] = [
   { id: '1', q: 'Cửa có bền không?', a: 'Rất bền, bảo hành 5 năm.' }
@@ -28,14 +28,16 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // State theo dõi item nào đang upload ảnh (để hiện loading spinner)
+  const [uploadingItem, setUploadingItem] = useState<{tab: string, index: number} | null>(null);
 
   // --- STATE DỮ LIỆU ---
-  // 1. Info & Product
   const [info, setInfo] = useState<WebsiteInfo>({ companyName: '', address: '', phone: '', email: '', taxId: '', zalo: '', facebook: '', mapIframe: '' });
   const [categories, setCategories] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   
-  // 2. CMS Content
+  // CMS Content
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [usps, setUsps] = useState<USP[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -43,7 +45,6 @@ const Settings = () => {
   const [process, setProcess] = useState<ProcessStep[]>([]);
   const [warranty, setWarranty] = useState<WarrantyPolicy>(DEFAULT_WARRANTY);
 
-  // State tạm cho input thêm mới danh mục
   const [newCat, setNewCat] = useState("");
   const [newBrand, setNewBrand] = useState("");
 
@@ -56,7 +57,6 @@ const Settings = () => {
         setCategories(settings.categories || []);
         setBrands(settings.brands || []);
         
-        // Load CMS Data (Nếu có thì lấy, không thì lấy Default)
         setSlides(settings.heroSlides || DEFAULT_SLIDES);
         setUsps(settings.usps || DEFAULT_USPS);
         setProjects(settings.projects || DEFAULT_PROJECTS);
@@ -74,8 +74,6 @@ const Settings = () => {
     setSaving(true);
     let success = false;
     
-    // Lưu ý: Cần đảm bảo doorService đã có các hàm này (saveSlides, saveUSPs...)
-    // Nếu chưa có, bạn dùng hàm saveSettings({ [key]: data }) cũng được.
     if (key === 'info') success = await doorService.saveWebsiteInfo(data);
     else if (key === 'product') success = await doorService.saveSettings({ categories, brands });
     else if (key === 'slides') success = await doorService.saveSlides(data);
@@ -90,7 +88,7 @@ const Settings = () => {
     else alert("❌ Lỗi khi lưu!");
   };
 
-  // --- HELPER FUNCTIONS (CRUD Mảng Object) ---
+  // --- HELPER FUNCTIONS ---
   const updateItem = (setter: any, list: any[], index: number, field: string, value: any) => {
     const newList = [...list];
     newList[index] = { ...newList[index], [field]: value };
@@ -107,7 +105,6 @@ const Settings = () => {
     }
   };
 
-  // Helper cho Danh mục/Thương hiệu (Mảng String đơn giản)
   const addSimpleItem = (state: string[], setter: any, value: string, setValue: any) => {
       if (value.trim() && !state.includes(value)) {
           setter([...state, value.trim()]);
@@ -118,7 +115,6 @@ const Settings = () => {
       setter(state.filter((_, i) => i !== index));
   };
 
-  // Helper cho Warranty (Mảng String trong Object)
   const updateWarrantyArray = (field: 'conditions' | 'refusals', index: number, value: string) => {
       const newList = [...warranty[field]];
       newList[index] = value;
@@ -129,6 +125,22 @@ const Settings = () => {
   };
   const removeWarrantyArray = (field: 'conditions' | 'refusals', index: number) => {
       setWarranty({ ...warranty, [field]: warranty[field].filter((_, i) => i !== index) });
+  };
+
+  // --- NEW: HÀM UPLOAD ẢNH CHO CMS ---
+  const handleCMSUpload = async (e: React.ChangeEvent<HTMLInputElement>, list: any[], setter: any, index: number, tabName: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingItem({ tab: tabName, index }); // Bật loading
+    const url = await doorService.uploadImage(file);
+    setUploadingItem(null); // Tắt loading
+
+    if (url) {
+        updateItem(setter, list, index, 'image', url);
+    } else {
+        alert("Lỗi tải ảnh lên!");
+    }
   };
 
   if (loading) return <div className="p-10 text-center dark:text-gray-400">⏳ Đang tải...</div>;
@@ -202,7 +214,6 @@ const Settings = () => {
       {/* --- 2. PRODUCT SETTINGS TAB --- */}
       {activeTab === 'product' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
-             {/* Danh mục */}
              <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded border dark:border-gray-600">
                 <h3 className="font-bold mb-3 dark:text-blue-300">📂 Quản lý Danh mục</h3>
                 <div className="flex gap-2 mb-3">
@@ -219,7 +230,6 @@ const Settings = () => {
                 </ul>
              </div>
 
-             {/* Thương hiệu */}
              <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded border dark:border-gray-600">
                 <h3 className="font-bold mb-3 dark:text-purple-300">🏷️ Quản lý Thương hiệu</h3>
                 <div className="flex gap-2 mb-3">
@@ -241,41 +251,69 @@ const Settings = () => {
         </div>
       )}
 
-      {/* --- 3. SLIDES TAB --- */}
+      {/* --- 3. SLIDES TAB (NÂNG CẤP) --- */}
       {activeTab === 'slides' && (
         <div className="space-y-6 animate-fade-in">
             {slides.map((slide, idx) => (
                 <div key={slide.id} className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded border dark:border-gray-600 relative group">
-                    <button onClick={() => removeItem(setSlides, slides, idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold z-10">✕ Xóa</button>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-bold mb-1 dark:text-gray-300">Tiêu đề lớn</label>
-                            <input value={slide.title} onChange={e => updateItem(setSlides, slides, idx, 'title', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
+                    <button onClick={() => removeItem(setSlides, slides, idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold z-10">✕</button>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Cột trái: Ảnh */}
+                        <div className="md:col-span-1">
+                            <label className="block text-xs font-bold mb-1 dark:text-gray-300">Hình ảnh</label>
+                            <div className="relative aspect-video bg-gray-200 dark:bg-gray-900 rounded border dark:border-gray-500 overflow-hidden flex items-center justify-center mb-2 group-hover:border-blue-400 transition-colors">
+                                {slide.image ? (
+                                    <img src={slide.image} alt="Preview" className="w-full h-full object-cover"/>
+                                ) : (
+                                    <span className="text-gray-400 text-xs">Chưa có ảnh</span>
+                                )}
+                                {/* Overlay Upload */}
+                                <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <label className="cursor-pointer bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-bold hover:bg-gray-100 flex items-center gap-1">
+                                        {uploadingItem?.tab === 'slides' && uploadingItem?.index === idx ? (
+                                            <>⏳ Đang tải...</>
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                                Tải ảnh lên
+                                            </>
+                                        )}
+                                        <input type="file" hidden accept="image/*" onChange={(e) => handleCMSUpload(e, slides, setSlides, idx, 'slides')} disabled={!!uploadingItem} />
+                                    </label>
+                                </div>
+                            </div>
+                            <input value={slide.image} onChange={e => updateItem(setSlides, slides, idx, 'image', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-xs dark:bg-gray-800 dark:text-white" placeholder="Hoặc dán link ảnh vào đây..."/>
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold mb-1 dark:text-gray-300">Tiêu đề phụ</label>
-                            <input value={slide.subtitle} onChange={e => updateItem(setSlides, slides, idx, 'subtitle', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-bold mb-1 dark:text-gray-300">Mô tả</label>
-                            <textarea rows={2} value={slide.description} onChange={e => updateItem(setSlides, slides, idx, 'description', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"></textarea>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold mb-1 dark:text-gray-300">Link ảnh (URL)</label>
-                            <input value={slide.image} onChange={e => updateItem(setSlides, slides, idx, 'image', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold mb-1 dark:text-gray-300">Nút bấm (CTA)</label>
-                            <div className="flex gap-2">
-                                <input value={slide.cta} onChange={e => updateItem(setSlides, slides, idx, 'cta', e.target.value)} className="w-1/2 border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white" placeholder="Tên nút"/>
-                                <input value={slide.link} onChange={e => updateItem(setSlides, slides, idx, 'link', e.target.value)} className="w-1/2 border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white" placeholder="Link đến..."/>
+
+                        {/* Cột phải: Thông tin */}
+                        <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold mb-1 dark:text-gray-300">Tiêu đề lớn</label>
+                                <input value={slide.title} onChange={e => updateItem(setSlides, slides, idx, 'title', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1 dark:text-gray-300">Tiêu đề phụ</label>
+                                <input value={slide.subtitle} onChange={e => updateItem(setSlides, slides, idx, 'subtitle', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"/>
+                            </div>
+                            <div className="col-span-2">
+                                <label className="block text-xs font-bold mb-1 dark:text-gray-300">Mô tả</label>
+                                <textarea rows={2} value={slide.description} onChange={e => updateItem(setSlides, slides, idx, 'description', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white"></textarea>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1 dark:text-gray-300">Tên nút (CTA)</label>
+                                <input value={slide.cta} onChange={e => updateItem(setSlides, slides, idx, 'cta', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white" placeholder="VD: Xem ngay"/>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1 dark:text-gray-300">Đường dẫn nút</label>
+                                <input value={slide.link} onChange={e => updateItem(setSlides, slides, idx, 'link', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white" placeholder="/san-pham"/>
                             </div>
                         </div>
                     </div>
-                    {slide.image && <img src={slide.image} alt="Preview" className="h-20 w-auto mt-2 rounded object-cover border dark:border-gray-600"/>}
                 </div>
             ))}
-            <button onClick={() => addItem(setSlides, slides, { title: 'Tiêu đề', subtitle: '', description: '', image: '', cta: 'Xem ngay', link: '/' })} className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-700 font-bold">+ Thêm Slide</button>
+            <button onClick={() => addItem(setSlides, slides, { title: 'Tiêu đề', subtitle: '', description: '', image: '', cta: 'Xem ngay', link: '/' })} className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-700 font-bold flex items-center justify-center gap-2">
+                <span>+</span> Thêm Slide Mới
+            </button>
             <div className="text-right pt-4 border-t dark:border-gray-700">
                 <button onClick={() => handleSave('slides', slides)} disabled={saving} className="bg-blue-600 text-white px-6 py-2 rounded font-bold">Lưu Slide</button>
             </div>
@@ -304,20 +342,38 @@ const Settings = () => {
          </div>
       )}
 
-      {/* 5. PROJECTS TAB */}
+      {/* --- 5. PROJECTS TAB (NÂNG CẤP) --- */}
       {activeTab === 'projects' && (
           <div className="space-y-4 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((p, idx) => (
-                    <div key={p.id} className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded border dark:border-gray-600 relative">
-                        <button onClick={() => removeItem(setProjects, projects, idx)} className="absolute top-2 right-2 text-red-500 font-bold">✕</button>
-                        <input value={p.title} onChange={e => updateItem(setProjects, projects, idx, 'title', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded mb-2 font-bold dark:bg-gray-800 dark:text-white" placeholder="Tên dự án"/>
-                        <input value={p.image} onChange={e => updateItem(setProjects, projects, idx, 'image', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white" placeholder="Link ảnh"/>
-                        {p.image && <img src={p.image} className="h-20 w-full object-cover mt-2 rounded border dark:border-gray-600"/>}
+                    <div key={p.id} className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded border dark:border-gray-600 relative flex flex-col gap-3">
+                        <button onClick={() => removeItem(setProjects, projects, idx)} className="absolute top-2 right-2 text-red-500 font-bold bg-white dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center shadow-sm z-10">✕</button>
+                        
+                        {/* Ảnh dự án */}
+                        <div className="relative aspect-[4/3] bg-gray-200 dark:bg-gray-900 rounded overflow-hidden flex items-center justify-center group">
+                            {p.image ? (
+                                <img src={p.image} className="w-full h-full object-cover"/>
+                            ) : (
+                                <span className="text-gray-400 text-xs">Chưa có ảnh</span>
+                            )}
+                            {/* Upload Button */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <label className="cursor-pointer bg-white text-gray-800 px-3 py-1 rounded text-xs font-bold hover:bg-gray-100 flex items-center gap-1">
+                                    {uploadingItem?.tab === 'projects' && uploadingItem?.index === idx ? '⏳...' : '⬆️ Upload'}
+                                    <input type="file" hidden accept="image/*" onChange={(e) => handleCMSUpload(e, projects, setProjects, idx, 'projects')} disabled={!!uploadingItem} />
+                                </label>
+                            </div>
+                        </div>
+                        <input value={p.image} onChange={e => updateItem(setProjects, projects, idx, 'image', e.target.value)} className="w-full border dark:border-gray-500 p-1.5 rounded text-xs dark:bg-gray-800 dark:text-white" placeholder="Link ảnh..."/>
+
+                        {/* Thông tin */}
+                        <input value={p.title} onChange={e => updateItem(setProjects, projects, idx, 'title', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded font-bold dark:bg-gray-800 dark:text-white" placeholder="Tên dự án"/>
+                        <input value={p.link} onChange={e => updateItem(setProjects, projects, idx, 'link', e.target.value)} className="w-full border dark:border-gray-500 p-2 rounded text-sm dark:bg-gray-800 dark:text-white" placeholder="Link chi tiết (nếu có)"/>
                     </div>
                 ))}
               </div>
-              <button onClick={() => addItem(setProjects, projects, { title: '', image: '' })} className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded font-bold">+ Thêm Dự án</button>
+              <button onClick={() => addItem(setProjects, projects, { title: '', image: '', link: '' })} className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded font-bold">+ Thêm Dự án</button>
               <div className="text-right pt-4 border-t dark:border-gray-700">
                 <button onClick={() => handleSave('projects', projects)} disabled={saving} className="bg-blue-600 text-white px-6 py-2 rounded font-bold">Lưu Dự án</button>
             </div>
@@ -363,10 +419,9 @@ const Settings = () => {
           </div>
       )}
 
-      {/* 8. WARRANTY TAB (Phức tạp hơn chút) */}
+      {/* 8. WARRANTY TAB */}
       {activeTab === 'warranty' && (
           <div className="space-y-8 animate-fade-in">
-              {/* Bảng thời gian bảo hành */}
               <div>
                   <h3 className="font-bold mb-2 dark:text-blue-300">1. Thời gian bảo hành</h3>
                   {warranty.periods.map((p, idx) => (
@@ -380,7 +435,6 @@ const Settings = () => {
                   <button onClick={() => setWarranty({...warranty, periods: [...warranty.periods, {product:'', time:'', scope:''}]})} className="text-sm text-blue-600 font-bold">+ Thêm dòng</button>
               </div>
 
-              {/* Điều kiện */}
               <div>
                   <h3 className="font-bold mb-2 dark:text-green-300">2. Điều kiện hợp lệ</h3>
                   {warranty.conditions.map((c, idx) => (
@@ -392,7 +446,6 @@ const Settings = () => {
                   <button onClick={() => addWarrantyArray('conditions')} className="text-sm text-green-600 font-bold">+ Thêm điều kiện</button>
               </div>
 
-              {/* Từ chối */}
               <div>
                   <h3 className="font-bold mb-2 dark:text-red-300">3. Từ chối bảo hành</h3>
                   {warranty.refusals.map((r, idx) => (

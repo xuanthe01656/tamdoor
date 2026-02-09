@@ -66,6 +66,7 @@ export interface Project {
   id: string;
   image: string;
   title: string;
+  link?: string;
 }
 
 // 6. FAQ (Câu hỏi thường gặp)

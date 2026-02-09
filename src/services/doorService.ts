@@ -154,7 +154,7 @@ export const doorService = {
   },
 
   // ==========================================
-  // B. NHÓM API CMS (DATA ĐỘNG TỪ DB) - ĐÃ NÂNG CẤP
+  // B. NHÓM API CMS (DATA ĐỘNG TỪ DB)
   // ==========================================
   // Logic chung: Gọi getSettings -> Nếu DB có thì trả về -> Nếu không có thì trả về MOCK
 
