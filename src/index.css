@@ -12,3 +12,12 @@
 html {
   transition: background-color 0.3s, color 0.3s;
 }
+/* Hiệu ứng nhún nhảy nhẹ cho nút gọi */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s infinite;
+}
