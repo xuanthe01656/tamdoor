@@ -5,14 +5,11 @@ import { Link } from 'react-router-dom';
 
 // Import services và interfaces
 import { doorService } from '../../services/doorService';
-import { Door } from '../../interfaces/door';
-import { HeroSlide } from '../../interfaces/hero';
+import { Door, HeroSlide, USP, Project, WebsiteInfo } from '../../interfaces/door'; // 👇 Import Interface chuẩn
 import ProductModal from '../../components/common/ProductModal';
-// import ProductCard from '../../components/product/ProductCard'; 
 
-// Interface nội bộ
-interface Advantage { icon: string; title: string; desc: string; }
-interface Project { image: string; title: string; }
+// Import Mock Data làm dự phòng (Fallback)
+import { MOCK_SLIDES, MOCK_ADVANTAGES, MOCK_PROJECTS } from '../../data/mockCMS';
 
 // Styles
 import 'swiper/css';
@@ -21,39 +18,45 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
 const HomePage = () => {
-  // 1. State cho dữ liệu tĩnh và Featured
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  // 1. State cho dữ liệu CMS (Lấy từ Admin)
+  const [slides, setSlides] = useState<HeroSlide[]>(MOCK_SLIDES);
+  const [advantages, setAdvantages] = useState<USP[]>(MOCK_ADVANTAGES);
+  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
+  const [info, setInfo] = useState<WebsiteInfo | null>(null);
+  
+  // 2. State cho Sản phẩm
   const [featuredDoors, setFeaturedDoors] = useState<Door[]>([]);
-  const [advantages, setAdvantages] = useState<Advantage[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [products, setProducts] = useState<Door[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 2. State cho danh sách "Hệ sinh thái sản phẩm" (Grid + Pagination)
-  const [products, setProducts] = useState<Door[]>([]);
+  // 3. State Grid & Pagination
   const [activeTab, setActiveTab] = useState<'door' | 'accessory'>('door');
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
   const [isProductLoading, setIsProductLoading] = useState(false);
   
-  // 3. State Modal
+  // 4. State Modal
   const [selectedProduct, setSelectedProduct] = useState<Door | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // --- EFFECT 1: Load dữ liệu tĩnh ban đầu ---
+  // --- EFFECT 1: Load Dữ liệu CMS & Featured ---
   useEffect(() => {
     const loadStaticData = async () => {
       try {
-        const [heroRes, advRes, projRes, featuredRes] = await Promise.all([
-          doorService.getHeroSlides(),
-          doorService.getAdvantages(),
-          doorService.getProjects(6),
-          doorService.getFeaturedProducts(8)
-        ]);
-        setSlides(heroRes);
-        setAdvantages(advRes);
-        setProjects(projRes);
+        // A. Lấy Cấu hình từ Admin (Slide, USP, Project, Info)
+        const settings = await doorService.getSettings();
+        if (settings) {
+            if (settings.heroSlides && settings.heroSlides.length > 0) setSlides(settings.heroSlides);
+            if (settings.usps && settings.usps.length > 0) setAdvantages(settings.usps);
+            if (settings.projects && settings.projects.length > 0) setProjects(settings.projects);
+            if (settings.websiteInfo) setInfo(settings.websiteInfo);
+        }
+
+        // B. Lấy sản phẩm nổi bật
+        const featuredRes = await doorService.getFeaturedProducts(8);
         setFeaturedDoors(featuredRes);
+
       } catch (error) {
-        console.error('Lỗi tải dữ liệu static:', error);
+        console.error('Lỗi tải dữ liệu:', error);
       } finally {
         setLoading(false);
       }
@@ -141,13 +144,10 @@ const HomePage = () => {
             {item.description}
           </p>
           
-          {/* --- SỬA Ở ĐÂY: LUÔN HIỂN THỊ "LIÊN HỆ" --- */}
           <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Giá bán:</span>
-            
-            {/* Bất kể có giá hay không, đều hiện LIÊN HỆ */}
             <span className="text-red-500 font-black text-xs uppercase tracking-widest">
-                 LIÊN HỆ
+                  LIÊN HỆ
             </span>
           </div>
         </div>
@@ -160,7 +160,7 @@ const HomePage = () => {
   return (
     <div className="bg-white overflow-x-hidden">
       
-      {/* SECTION 1: HERO SLIDER */}
+      {/* SECTION 1: HERO SLIDER (Dữ liệu động từ Admin) */}
       <section className="relative h-screen w-full overflow-hidden bg-black">
         {slides.length > 0 && (
           <Swiper
@@ -179,17 +179,18 @@ const HomePage = () => {
                 {({ isActive }) => (
                   <div className="relative h-full w-full flex items-center justify-center">
                     <div className={`absolute inset-0 transition-transform duration-[10000ms] ease-linear ${isActive ? 'scale-110' : 'scale-100'}`}>
-                      <img src={slide.image} alt={slide.title} className="w-full h-full object-cover brightness-[0.7]" />
+                      <img src={slide.image} alt={slide.title} className="w-full h-full object-cover brightness-[0.7]" onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/1920x1080?text=No+Slide+Image'; }} />
                       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
                     </div>
                     {isActive && (
                       <div className="relative z-10 text-center px-6 w-full max-w-[90vw]">
                         <h1 className="text-[12vw] md:text-[10vw] font-black uppercase tracking-[-0.05em] leading-[0.8] text-white drop-shadow-2xl animate-revealUp">{slide.title}</h1>
                         <p className="mt-4 text-xl md:text-5xl font-light uppercase tracking-[0.5em] text-blue-400 animate-revealUp delay-300">{slide.subtitle}</p>
+                        <p className="mt-4 text-sm md:text-lg text-gray-300 max-w-2xl mx-auto animate-fadeIn delay-700 hidden md:block">{slide.description}</p>
                         <div className="mt-12 animate-fadeIn opacity-0 [animation-fill-mode:forwards] delay-1000">
-                          <a href={slide.link} className="px-12 py-5 border border-white/50 text-white font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+                          <Link to={slide.link} className="px-12 py-5 border border-white/50 text-white font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">
                             {slide.cta}
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     )}
@@ -301,7 +302,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* SECTION 4: TẠI SAO CHỌN */}
+      {/* SECTION 4: TẠI SAO CHỌN (Dữ liệu động từ Admin) */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-black uppercase text-center mb-16 tracking-tighter">Tại sao chọn CasarDoor?</h2>
@@ -317,14 +318,14 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* SECTION 5: CÔNG TRÌNH */}
+      {/* SECTION 5: CÔNG TRÌNH (Dữ liệu động từ Admin) */}
       <section className="py-20 px-6 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl font-black uppercase mb-12 tracking-tighter">Công trình <span className="text-blue-500">tiêu biểu</span></h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {projects.map((proj, idx) => (
               <div key={idx} className="relative aspect-[4/3] group overflow-hidden rounded-xl shadow-2xl">
-                <img src={proj.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={proj.title} />
+                <img src={proj.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={proj.title} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x600?text=Project'; }}/>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent flex items-end p-8">
                   <h3 className="text-xl font-bold uppercase translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{proj.title}</h3>
                 </div>
@@ -334,7 +335,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* SECTION 6: CTA */}
+      {/* SECTION 6: CTA (Số điện thoại động) */}
       <section className="py-16 md:py-20 px-6 bg-blue-700 text-white text-center">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase mb-6 md:mb-8">
@@ -344,12 +345,12 @@ const HomePage = () => {
             Liên hệ ngay để nhận tư vấn miễn phí & báo giá tốt nhất!
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
-            <a href="tel:0901234567" className="px-10 md:px-12 py-5 md:py-6 bg-white text-blue-700 font-black uppercase text-lg md:text-xl rounded-full hover:shadow-2xl transition-all transform hover:-translate-y-1">
-              Gọi ngay: 0901 234 567
+            <a href={`tel:${info?.phone}`} className="px-10 md:px-12 py-5 md:py-6 bg-white text-blue-700 font-black uppercase text-lg md:text-xl rounded-full hover:shadow-2xl transition-all transform hover:-translate-y-1">
+              Gọi ngay: {info?.phone || 'ĐANG CẬP NHẬT'}
             </a>
-            <button className="px-10 md:px-12 py-5 md:py-6 border-2 border-white text-white font-black uppercase text-lg md:text-xl rounded-full hover:bg-white hover:text-blue-700 transition-all transform hover:-translate-y-1">
+            <Link to="/lien-he" className="px-10 md:px-12 py-5 md:py-6 border-2 border-white text-white font-black uppercase text-lg md:text-xl rounded-full hover:bg-white hover:text-blue-700 transition-all transform hover:-translate-y-1">
               Yêu cầu báo giá
-            </button>
+            </Link>
           </div>
         </div>
       </section>

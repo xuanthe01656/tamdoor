@@ -14,14 +14,13 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, signOut,sendPasswordResetEmail } from "firebase/auth";
-import { firebaseConfig } from "../config/firebase";
-import { db } from '../config/firebase';
+import { getAuth, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { firebaseConfig, db } from "../config/firebase"; // Gộp import cho gọn
 
-import { Door } from '../interfaces/door';
-import { HeroSlide } from '../interfaces/hero';
+// Import Interfaces
+import { Door, HeroSlide, USP, Project, FAQ, ProcessStep, WarrantyPolicy, WebsiteInfo, SystemSettings } from '../interfaces/door';
 
-// Import dữ liệu CMS tĩnh
+// Import Mock Data (Để làm fallback khi DB chưa có dữ liệu)
 import { 
   MOCK_SLIDES, 
   MOCK_ADVANTAGES, 
@@ -29,38 +28,9 @@ import {
   MOCK_FAQS,       
   MOCK_PROCESS,    
   MOCK_WARRANTY    
-} from '../data/mockCMS';
+} from '../data/mockCMS'; 
 
-// --- ĐỊNH NGHĨA TYPES (INTERFACES) ---
-
-export interface Advantage {
-  icon: string;
-  title: string;
-  desc: string;
-}
-
-export interface Project {
-  image: string;
-  title: string;
-}
-
-export interface FAQItem {
-  q: string;
-  a: string;
-}
-
-export interface ProcessStep {
-  step: string;
-  title: string;
-  desc: string;
-}
-
-export interface WarrantyPolicy {
-  periods: { product: string; time: string; scope: string }[];
-  conditions: string[];
-  refusals: string[];
-}
-
+// --- ĐỊNH NGHĨA TYPES ---
 export interface PaginatedResult<T> {
   data: T[];
   total: number;
@@ -68,25 +38,9 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-// --- THÊM MỚI: Interface cho Settings & Footer ---
-export interface WebsiteInfo {
-  companyName: string;
-  address: string;
-  phone: string;
-  zalo: string;
-  email: string;
-  taxId: string;
-  facebook: string;
-  mapIframe: string;
-}
-
-export interface SystemSettings {
-  categories?: string[];
-  brands?: string[];
-  websiteInfo?: WebsiteInfo;
-}
-
 const COLLECTION_NAME = 'products';
+const SETTINGS_COLLECTION = 'settings';
+const SETTINGS_DOC_ID = 'general';
 
 // --- SERVICE LOGIC ---
 export const doorService = {
@@ -105,7 +59,7 @@ export const doorService = {
     }
   },
 
-  // 2. Lấy sản phẩm theo type ('door' | 'accessory')
+  // 2. Lấy sản phẩm theo type
   getProductsByType: async (type: 'door' | 'accessory'): Promise<Door[]> => {
     try {
       const q = query(collection(db, COLLECTION_NAME), where("type", "==", type));
@@ -133,7 +87,7 @@ export const doorService = {
     }
   },
 
-  // 4. Lấy sản phẩm nổi bật (MỚI NHẤT)
+  // 4. Lấy sản phẩm nổi bật
   getFeaturedProducts: async (limitVal: number = 8): Promise<Door[]> => {
     try {
       const q = query(
@@ -146,7 +100,6 @@ export const doorService = {
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Door));
     } catch (error) {
       console.warn("Lỗi Featured (Fallback client sort):", error);
-      // Fallback: Nếu chưa có Index, lấy về client rồi tự sort
       const allDocs = await getDocs(collection(db, COLLECTION_NAME));
       return allDocs.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as Door))
@@ -156,7 +109,7 @@ export const doorService = {
     }
   },
 
-  // 5. Tìm kiếm sản phẩm (Client-side search)
+  // 5. Tìm kiếm sản phẩm
   searchProducts: async (keyword: string): Promise<Door[]> => {
     try {
       const snapshot = await getDocs(collection(db, COLLECTION_NAME));
@@ -184,7 +137,6 @@ export const doorService = {
       const snapshot = await getDocs(q);
       const allItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Door));
 
-      // Sắp xếp MỚI NHẤT lên đầu
       allItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
       const total = allItems.length;
@@ -202,19 +154,43 @@ export const doorService = {
   },
 
   // ==========================================
-  // B. NHÓM API NỘI DUNG (MOCK DATA)
+  // B. NHÓM API CMS (DATA ĐỘNG TỪ DB) - ĐÃ NÂNG CẤP
   // ==========================================
+  // Logic chung: Gọi getSettings -> Nếu DB có thì trả về -> Nếu không có thì trả về MOCK
 
-  // 7-12: Giữ nguyên Mock Data
-  getHeroSlides: async (): Promise<HeroSlide[]> => Promise.resolve(MOCK_SLIDES),
-  getAdvantages: async (): Promise<Advantage[]> => Promise.resolve(MOCK_ADVANTAGES),
-  getProjects: async (limit: number = 6): Promise<Project[]> => Promise.resolve(MOCK_PROJECTS.slice(0, limit)),
-  getFAQs: async (): Promise<FAQItem[]> => Promise.resolve(MOCK_FAQS),
-  getProcessSteps: async (): Promise<ProcessStep[]> => Promise.resolve(MOCK_PROCESS),
-  getWarrantyPolicy: async (): Promise<WarrantyPolicy> => Promise.resolve(MOCK_WARRANTY),
+  getHeroSlides: async (): Promise<HeroSlide[]> => {
+    const settings = await doorService.getSettings();
+    return (settings.heroSlides && settings.heroSlides.length > 0) ? settings.heroSlides : MOCK_SLIDES;
+  },
+
+  getAdvantages: async (): Promise<USP[]> => {
+    const settings = await doorService.getSettings();
+    return (settings.usps && settings.usps.length > 0) ? settings.usps : MOCK_ADVANTAGES;
+  },
+
+  getProjects: async (limit: number = 6): Promise<Project[]> => {
+    const settings = await doorService.getSettings();
+    const projects = (settings.projects && settings.projects.length > 0) ? settings.projects : MOCK_PROJECTS;
+    return projects.slice(0, limit);
+  },
+
+  getFAQs: async (): Promise<FAQ[]> => {
+    const settings = await doorService.getSettings();
+    return (settings.faqs && settings.faqs.length > 0) ? settings.faqs : MOCK_FAQS;
+  },
+
+  getProcessSteps: async (): Promise<ProcessStep[]> => {
+    const settings = await doorService.getSettings();
+    return (settings.process && settings.process.length > 0) ? settings.process : MOCK_PROCESS;
+  },
+
+  getWarrantyPolicy: async (): Promise<WarrantyPolicy> => {
+    const settings = await doorService.getSettings();
+    return settings.warranty ? settings.warranty : MOCK_WARRANTY;
+  },
 
   // ==========================================
-  // C. NHÓM API QUẢN TRỊ (CRUD)
+  // C. NHÓM API QUẢN TRỊ SẢN PHẨM (CRUD)
   // ==========================================
 
   // 13. Xóa sản phẩm
@@ -239,7 +215,7 @@ export const doorService = {
             .toLowerCase()
             .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
             .replace(/ /g, "-")
-            .replace(/[^\w-]+/g, "") // Loại bỏ ký tự đặc biệt
+            .replace(/[^\w-]+/g, "")
       };
 
       await addDoc(collection(db, COLLECTION_NAME), dataToSave);
@@ -250,7 +226,7 @@ export const doorService = {
     }
   },
 
-  // 15. Lấy chi tiết 1 sản phẩm theo ID
+  // 15. Lấy chi tiết 1 sản phẩm
   getProductById: async (id: string) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
@@ -281,19 +257,19 @@ export const doorService = {
   },
 
   // ==========================================
-  // D. NHÓM API CẤU HÌNH & FOOTER (SETTINGS)
+  // D. NHÓM API CẤU HÌNH & CMS (SETTINGS) - ĐÃ NÂNG CẤP
   // ==========================================
 
-  // 17. Lấy Settings (Gộp chung: Danh mục, Thương hiệu, WebsiteInfo)
+  // 17. Lấy Settings (Gộp tất cả mọi thứ)
   getSettings: async (): Promise<SystemSettings> => {
     try {
-      const docRef = doc(db, 'settings', 'general');
+      const docRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         return docSnap.data() as SystemSettings;
       } else {
-        // Trả về mặc định nếu chưa có DB
+        // Trả về mặc định cơ bản nếu DB chưa có
         return {
           categories: ["Cửa nhựa Composite", "Cửa thép vân gỗ", "Phụ kiện cửa"],
           brands: ["Sungyu", "KOS", "Huy Hoàng"],
@@ -306,10 +282,10 @@ export const doorService = {
     }
   },
 
-  // 18. Lưu Danh mục & Thương hiệu
-  saveSettings: async (data: any) => {
+  // 18. Hàm lưu Settings chung (Core)
+  saveSettings: async (data: Partial<SystemSettings>) => {
     try {
-      await setDoc(doc(db, 'settings', 'general'), data, { merge: true });
+      await setDoc(doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID), data, { merge: true });
       return true;
     } catch (error) {
       console.error("Lỗi lưu settings:", error);
@@ -317,30 +293,47 @@ export const doorService = {
     }
   },
 
-  // 19. Lưu thông tin Website (Footer, Liên hệ...)
+  // --- CÁC HÀM WRAPPER CHO CMS ---
   saveWebsiteInfo: async (info: WebsiteInfo) => {
-    try {
-      const docRef = doc(db, 'settings', 'general');
-      await setDoc(docRef, { websiteInfo: info }, { merge: true });
-      return true;
-    } catch (error) {
-      console.error("Lỗi lưu thông tin web:", error);
-      return false;
-    }
+    return doorService.saveSettings({ websiteInfo: info });
+  },
+
+  saveSlides: async (slides: HeroSlide[]) => {
+    return doorService.saveSettings({ heroSlides: slides });
+  },
+
+  saveUSPs: async (usps: USP[]) => {
+    return doorService.saveSettings({ usps: usps });
+  },
+
+  saveProjects: async (projects: Project[]) => {
+    return doorService.saveSettings({ projects: projects });
+  },
+
+  saveFAQs: async (faqs: FAQ[]) => {
+    return doorService.saveSettings({ faqs: faqs });
+  },
+
+  saveProcess: async (process: ProcessStep[]) => {
+    return doorService.saveSettings({ process: process });
+  },
+
+  saveWarranty: async (warranty: WarrantyPolicy) => {
+    return doorService.saveSettings({ warranty: warranty });
   },
 
   // ==========================================
   // E. NHÓM API UPLOAD & EXCEL
   // ==========================================
 
-  // 20. Upload ảnh lên Cloudinary (Không cần thẻ Visa)
+  // 20. Upload ảnh
   uploadImage: async (file: File): Promise<string | null> => {
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
-      console.error("❌ CHƯA CẤU HÌNH .ENV: Vui lòng kiểm tra file .env");
-      alert("Lỗi cấu hình hệ thống (Thiếu Cloudinary Config)");
+      console.error("❌ Thiếu cấu hình Cloudinary");
+      alert("Lỗi cấu hình .env");
       return null;
     }
 
@@ -355,10 +348,7 @@ export const doorService = {
         body: formData
       });
 
-      if (!response.ok) {
-        throw new Error('Lỗi upload Cloudinary');
-      }
-
+      if (!response.ok) throw new Error('Lỗi upload Cloudinary');
       const data = await response.json();
       return data.secure_url;
     } catch (error) {
@@ -367,11 +357,10 @@ export const doorService = {
     }
   },
 
-  // 21. Bulk Insert (Dùng cho Excel)
+  // 21. Bulk Insert
   addMultipleProducts: async (products: any[]) => {
     let successCount = 0;
     let failCount = 0;
-
     for (const product of products) {
       try {
         await doorService.addProduct(product);
@@ -382,13 +371,14 @@ export const doorService = {
     }
     return { successCount, failCount };
   },
-  // 22. Gửi yêu cầu liên hệ (Lưu vào collection 'contacts')
+
+  // 22. Gửi liên hệ
   sendContactRequest: async (data: { name: string; phone: string; email?: string; message: string }) => {
     try {
       await addDoc(collection(db, 'contacts'), {
         ...data,
-        createdAt: serverTimestamp(), // Lưu thời gian gửi
-        status: 'new' // Mặc định là 'Mới' để Admin biết chưa xử lý
+        createdAt: serverTimestamp(),
+        status: 'new'
       });
       return true;
     } catch (error) {
@@ -396,11 +386,12 @@ export const doorService = {
       return false;
     }
   },
+
   // ==========================================
   // F. NHÓM API QUẢN LÝ LIÊN HỆ (ADMIN)
   // ==========================================
 
-  // 23. Lấy danh sách liên hệ (Sắp xếp mới nhất trước)
+  // 23. Lấy danh sách liên hệ
   getAllContacts: async () => {
     try {
       const q = query(collection(db, 'contacts'), orderBy('createdAt', 'desc'));
@@ -412,7 +403,7 @@ export const doorService = {
     }
   },
 
-  // 24. Cập nhật trạng thái (VD: Đã tư vấn)
+  // 24. Cập nhật trạng thái
   updateContactStatus: async (id: string, status: 'new' | 'contacted' | 'spam') => {
     try {
       const docRef = doc(db, 'contacts', id);
@@ -434,6 +425,7 @@ export const doorService = {
       return false;
     }
   },
+
   // ==========================================
   // G. NHÓM API QUẢN LÝ USER (ADMIN ONLY)
   // ==========================================
@@ -450,39 +442,31 @@ export const doorService = {
     }
   },
 
-  // 27. Tạo User mới (MÀ KHÔNG BỊ LOGOUT ADMIN)
+  // 27. Tạo User mới
   createUser: async (userData: { email: string; pass: string; name: string; role: string }) => {
     try {
-      // 1. Tạo một App phụ (Secondary App)
       const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
       const secondaryAuth = getAuth(secondaryApp);
-
-      // 2. Tạo user trên App phụ đó
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, userData.email, userData.pass);
       const newUser = userCredential.user;
 
-      // 3. Lưu thông tin vào Firestore (Dùng db chính)
       await setDoc(doc(db, "users", newUser.uid), {
         email: userData.email,
         name: userData.name,
-        role: userData.role, // 'admin' hoặc 'staff'
+        role: userData.role,
         createdAt: serverTimestamp()
       });
 
-      // 4. Đăng xuất user mới khỏi App phụ (để dọn dẹp)
       await signOut(secondaryAuth);
-      
       return true;
     } catch (error: any) {
       console.error("Lỗi tạo user:", error);
-      alert("Lỗi: " + error.message); // Hiển thị lỗi Firebase (VD: Email đã tồn tại)
+      alert("Lỗi: " + error.message);
       return false;
     }
   },
 
-  // 28. Xóa User (Chỉ xóa quyền truy cập trong Firestore)
-  // Lưu ý: Không xóa được Login trong Auth nếu không có Backend, 
-  // nhưng xóa trong Firestore là họ cũng không vào được Admin nữa.
+  // 28. Xóa User
   deleteUser: async (id: string) => {
     try {
       await deleteDoc(doc(db, 'users', id));
@@ -492,14 +476,12 @@ export const doorService = {
       return false;
     }
   },
-  // 29. Cập nhật thông tin User (Tên, Quyền)
+
+  // 29. Cập nhật User
   updateUser: async (uid: string, data: { name: string; role: string }) => {
     try {
       const docRef = doc(db, 'users', uid);
-      await updateDoc(docRef, {
-        name: data.name,
-        role: data.role
-      });
+      await updateDoc(docRef, { name: data.name, role: data.role });
       return true;
     } catch (error) {
       console.error("Lỗi update user:", error);
@@ -507,7 +489,7 @@ export const doorService = {
     }
   },
 
-  // 30. Gửi Email đặt lại mật khẩu
+  // 30. Reset Password
   sendPasswordReset: async (email: string) => {
     try {
       const auth = getAuth();
@@ -518,5 +500,5 @@ export const doorService = {
       alert("Lỗi: " + error.message);
       return false;
     }
-  }
+  },
 };
