@@ -178,30 +178,49 @@ const Settings = () => {
       {activeTab === 'info' && (
          <div className="space-y-6 animate-fade-in">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {/* Tên công ty */}
                  <div className="col-span-2">
                      <label className="block text-sm font-bold mb-1 dark:text-gray-300">Tên công ty</label>
                      <input value={info.companyName} onChange={e => setInfo({...info, companyName: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white"/>
                  </div>
+
+                 {/* Mã số thuế (MỚI THÊM) */}
+                 <div>
+                     <label className="block text-sm font-bold mb-1 dark:text-gray-300">Mã số thuế (MST)</label>
+                     <input value={info.taxId} onChange={e => setInfo({...info, taxId: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white" placeholder="Mã số thuế..."/>
+                 </div>
+
+                 {/* Hotline */}
                  <div>
                      <label className="block text-sm font-bold mb-1 dark:text-gray-300">Hotline</label>
                      <input value={info.phone} onChange={e => setInfo({...info, phone: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white"/>
                  </div>
+
+                 {/* Zalo */}
                  <div>
                      <label className="block text-sm font-bold mb-1 dark:text-gray-300">Zalo</label>
                      <input value={info.zalo} onChange={e => setInfo({...info, zalo: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white"/>
                  </div>
+
+                 {/* Email */}
                  <div>
                      <label className="block text-sm font-bold mb-1 dark:text-gray-300">Email</label>
                      <input value={info.email} onChange={e => setInfo({...info, email: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white"/>
                  </div>
-                 <div>
+
+                 {/* Facebook */}
+                 <div className="col-span-2">
                      <label className="block text-sm font-bold mb-1 dark:text-gray-300">Facebook Link</label>
                      <input value={info.facebook} onChange={e => setInfo({...info, facebook: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white"/>
                  </div>
+
+                 {/* Địa chỉ */}
                  <div className="col-span-2">
                      <label className="block text-sm font-bold mb-1 dark:text-gray-300">Địa chỉ</label>
                      <input value={info.address} onChange={e => setInfo({...info, address: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white"/>
                  </div>
+
+                 {/* Map */}
                  <div className="col-span-2">
                      <label className="block text-sm font-bold mb-1 dark:text-gray-300">Google Map Iframe</label>
                      <textarea rows={3} value={info.mapIframe} onChange={e => setInfo({...info, mapIframe: e.target.value})} className="w-full border dark:border-gray-600 p-3 rounded dark:bg-gray-700 dark:text-white font-mono text-xs"/>
@@ -251,7 +270,7 @@ const Settings = () => {
         </div>
       )}
 
-      {/* --- 3. SLIDES TAB (NÂNG CẤP) --- */}
+      {/* --- 3. SLIDES TAB --- */}
       {activeTab === 'slides' && (
         <div className="space-y-6 animate-fade-in">
             {slides.map((slide, idx) => (

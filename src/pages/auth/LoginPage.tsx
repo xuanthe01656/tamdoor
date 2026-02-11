@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth'; 
 import { auth } from '../../config/firebase'; 
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext'; // 1. Import useAuth
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,17 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // 2. Lấy thông tin userRole và currentUser từ Context
+  const { userRole, currentUser } = useAuth(); 
+
+  // 3. EFFECT: Tự động chuyển hướng khi phát hiện đã là Admin
+  // Logic: Bất cứ khi nào userRole thay đổi thành 'admin', tự động nhảy trang
+  useEffect(() => {
+    if (currentUser && userRole === 'admin') {
+      navigate('/admin');
+    }
+  }, [currentUser, userRole, navigate]);
 
   // HÀM ĐĂNG NHẬP
   const handleLogin = async (e: React.FormEvent) => {
@@ -18,11 +30,10 @@ const LoginPage = () => {
     
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Đăng nhập thành công -> Chuyển hướng vào Admin
-      navigate('/admin'); 
+      // 4. QUAN TRỌNG: Xóa dòng navigate('/admin') ở đây đi.
+      // Hãy để useEffect ở trên tự lo việc chuyển hướng khi dữ liệu load xong.
     } catch (err: any) {
       console.error(err);
-      // Xử lý thông báo lỗi thân thiện hơn
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         setError('❌ Email hoặc mật khẩu không chính xác!');
       } else if (err.code === 'auth/too-many-requests') {
@@ -30,16 +41,13 @@ const LoginPage = () => {
       } else {
         setError('❌ Lỗi đăng nhập: ' + err.message);
       }
-    } finally {
-      setLoading(false);
-    }
+      setLoading(false); // Chỉ tắt loading khi có lỗi
+    } 
+    // Lưu ý: Không tắt loading ở finally nếu thành công, để tránh UI bị giật về form đăng nhập trước khi chuyển trang
   };
 
   return (
-    // CONTAINER: dark:bg-gray-900
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300 p-4">
-      
-      {/* CARD: dark:bg-gray-800 dark:border-gray-700 */}
       <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700">
         
         <div className="text-center mb-8">
@@ -57,7 +65,6 @@ const LoginPage = () => {
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Email</label>
-            {/* INPUT: dark:bg-gray-700 dark:border-gray-600 dark:text-white */}
             <input 
               type="email" required 
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all"
@@ -85,7 +92,6 @@ const LoginPage = () => {
           </button>
         </form>
 
-        {/* Footer Link */}
         <div className="mt-8 text-center pt-6 border-t border-gray-100 dark:border-gray-700">
             <Link to="/" className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-1">
                 ← Quay về trang chủ

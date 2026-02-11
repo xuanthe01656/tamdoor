@@ -26,6 +26,7 @@ import Settings from './pages/admin/Settings'
 import ProductEdit from './pages/admin/ProductEdit';
 import ContactList from './pages/admin/ContactList';
 import UserList from './pages/admin/UserList';
+import ProfilePage from './pages/admin/ProfilePage'
 // --- AUTH IMPORTS ---
 import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
@@ -82,6 +83,7 @@ const router = createBrowserRouter([
           { path: "products/new", element: <ProductAdd /> },
           { path: "products/edit/:id", element: <ProductEdit /> },
           { path: "contacts", element: <ContactList /> },
+          { path: "profile", element: <ProfilePage /> },
 
           // B. NHỮNG TRANG CHỈ ADMIN MỚI ĐƯỢC VÀO (Lồng thêm AdminRoute)
           {

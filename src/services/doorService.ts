@@ -14,7 +14,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail,updateProfile, updatePassword, User } from "firebase/auth";
 import { firebaseConfig, db } from "../config/firebase"; // Gộp import cho gọn
 
 // Import Interfaces
@@ -501,4 +501,34 @@ export const doorService = {
       return false;
     }
   },
+  // 31. Cập nhật thông tin cá nhân (Tên hiển thị)
+  updateCurrentUser: async (user: User, displayName: string) => {
+    try {
+      // 1. Update trong Firebase Auth (để hiển thị trên Header ngay)
+      await updateProfile(user, { displayName: displayName });
+      
+      // 2. Update trong Firestore (để lưu trong danh sách nhân viên)
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, { name: displayName });
+      
+      return true;
+    } catch (error) {
+      console.error("Lỗi update profile:", error);
+      return false;
+    }
+  },
+
+  // 32. Đổi mật khẩu
+  changePassword: async (user: User, newPass: string) => {
+    try {
+      await updatePassword(user, newPass);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Lỗi đổi pass:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        return { success: false, message: 'Bạn cần đăng xuất và đăng nhập lại để thực hiện hành động này!' };
+      }
+      return { success: false, message: error.message };
+    }
+  }
 };
