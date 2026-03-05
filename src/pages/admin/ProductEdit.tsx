@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doorService } from '../../services/doorService';
-import { Door, ProductSpecification, ProductColor } from '../../interfaces/door'; // Đã thêm ProductColor
+import { Door, ProductSpecification, ProductColor } from '../../interfaces/door';
 
 const ProductEdit = () => {
   const { id } = useParams();
@@ -68,9 +68,20 @@ const ProductEdit = () => {
     setFormData(prev => ({ ...prev, [name]: name === 'price' ? Number(value) : value }));
   };
 
+  // 👇 ĐÃ FIX: Sửa logic hàm handleBrandChange
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
-    setSpecs(prev => prev.map(s => s.key === 'Thương hiệu' ? { ...s, value: val } : s));
+    setSpecs(prev => {
+      // Kiểm tra xem đã có spec 'Thương hiệu' chưa
+      const hasBrand = prev.some(s => s.key === 'Thương hiệu');
+      if (hasBrand) {
+        // Nếu có rồi thì cập nhật giá trị
+        return prev.map(s => s.key === 'Thương hiệu' ? { ...s, value: val } : s);
+      } else {
+        // Nếu chưa có thì thêm mới vào mảng
+        return [...prev, { key: 'Thương hiệu', value: val }];
+      }
+    });
   };
 
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,6 +290,8 @@ const ProductEdit = () => {
                   <select name="category" value={formData.category} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 p-3 rounded-xl font-bold dark:text-white outline-none">
                     {categoryOptions.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                   </select>
+                  
+                  {/* Select Thương hiệu liên kết với Specs */}
                   <select value={specs.find(s => s.key === 'Thương hiệu')?.value || ''} onChange={handleBrandChange} className="w-full bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 p-3 rounded-xl font-bold dark:text-white outline-none">
                     <option value="">-- Chọn thương hiệu --</option>
                     {brandOptions.map(brand => (<option key={brand} value={brand}>{brand}</option>))}

@@ -76,43 +76,39 @@ const ProductModal = ({ product, isOpen, onClose }: ProductModalProps) => {
              Liên hệ báo giá
           </div>
 
-          {/* --- BỘ CHỌN MÀU SẮC (Sẽ ẩn nếu không có biến thể màu) --- */}
-          {product?.colors && product.colors.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-bold uppercase text-gray-900 mb-3 tracking-widest flex items-center gap-2">
-                <span className="w-6 h-[2px] bg-black"></span> 
-                Màu sắc: <span className="text-blue-600 font-normal ml-1">{activeColor !== 'default' ? activeColor : 'Mặc định'}</span>
-              </h3>
-              
-              <div className="flex flex-wrap gap-2">
-                {/* Nút màu mặc định */}
+         {/* --- BỘ CHỌN MÀU SẮC (Luôn hiển thị để đồng bộ) --- */}
+          <div className="mb-6">
+            <h3 className="text-sm font-bold uppercase text-gray-900 mb-3 tracking-widest flex items-center gap-2">
+              <span className="w-6 h-[2px] bg-black"></span> 
+              Màu sắc: <span className="text-blue-600 font-normal ml-1">{activeColor !== 'default' ? activeColor : 'Mặc định'}</span>
+            </h3>
+            
+            <div className="flex flex-wrap gap-2">
+              {/* Nút màu mặc định */}
+              <button 
+                onClick={() => { setActiveImage(product?.image || ''); setActiveColor('default'); }}
+                className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-gray-50 ${activeColor === 'default' ? 'border-blue-600 shadow-md scale-105' : 'border-gray-200 hover:border-blue-300 opacity-70 hover:opacity-100'}`}
+                title="Mặc định"
+              >
+                {product?.image && <img src={product.image} className="w-full h-full object-cover" alt="Mặc định" />}
+              </button>
+
+              {/* Các nút màu biến thể */}
+              {product?.colors && product.colors.map((colorItem, idx) => (
                 <button 
-                  onClick={() => { setActiveImage(product.image); setActiveColor('default'); }}
-                  className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-gray-50 ${activeColor === 'default' ? 'border-blue-600 shadow-md scale-105' : 'border-gray-200 hover:border-blue-300 opacity-70 hover:opacity-100'}`}
-                  title="Mặc định"
+                  key={idx}
+                  onClick={() => { setActiveImage(colorItem.image); setActiveColor(colorItem.name); }}
+                  className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all relative group cursor-pointer bg-gray-50 ${activeColor === colorItem.name ? 'border-blue-600 shadow-md scale-105' : 'border-gray-200 hover:border-blue-300 opacity-70 hover:opacity-100'}`}
+                  title={colorItem.name}
                 >
-                  <img src={product.image} className="w-full h-full object-cover" alt="Mặc định" />
+                  <img src={colorItem.image} className="w-full h-full object-cover" alt={colorItem.name} />
+                  <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center text-[9px] font-bold text-white text-center leading-tight px-1 backdrop-blur-sm transition-all">
+                     {colorItem.name}
+                  </div>
                 </button>
-
-                {/* Các nút màu biến thể */}
-                {product.colors.map((colorItem, idx) => (
-                  <button 
-                    key={idx}
-                    onClick={() => { setActiveImage(colorItem.image); setActiveColor(colorItem.name); }}
-                    className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all relative group cursor-pointer bg-gray-50 ${activeColor === colorItem.name ? 'border-blue-600 shadow-md scale-105' : 'border-gray-200 hover:border-blue-300 opacity-70 hover:opacity-100'}`}
-                    title={colorItem.name}
-                  >
-                    <img src={colorItem.image} className="w-full h-full object-cover" alt={colorItem.name} />
-                    {/* Tooltip hiển thị tên màu */}
-                    <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center text-[9px] font-bold text-white text-center leading-tight px-1 backdrop-blur-sm transition-all">
-                       {colorItem.name}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
-          )}
-
+          </div>
           <p className="text-gray-600 leading-relaxed mb-8 border-l-4 border-gray-200 pl-4">
             {product?.description}
           </p>

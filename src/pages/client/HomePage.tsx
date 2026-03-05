@@ -150,33 +150,30 @@ const HomePage = () => {
         <div className="flex flex-col flex-grow px-1">
           
           {/* --- THANH CHỌN MÀU SẮC (Color Swatches) --- */}
-          {item.colors && item.colors.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3 z-20">
-              {/* Nút màu gốc */}
+          <div className="flex flex-wrap gap-2 mb-3 z-20">
+            {/* Nút màu gốc */}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(item.image); setActiveColor('default'); }}
+              onMouseEnter={() => { setCurrentImage(item.image); setActiveColor('default'); }}
+              className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === 'default' ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
+              title="Mặc định"
+            >
+              <img src={item.image} className="w-full h-full object-cover" alt="Mặc định"/>
+            </button>
+            
+            {/* Các nút màu biến thể */}
+            {item.colors && item.colors.map((c, i) => (
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(item.image); setActiveColor('default'); }}
-                onMouseEnter={() => { setCurrentImage(item.image); setActiveColor('default'); }}
-                className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === 'default' ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
-                title="Mặc định"
+                key={i}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(c.image); setActiveColor(c.name); }}
+                onMouseEnter={() => { setCurrentImage(c.image); setActiveColor(c.name); }}
+                className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === c.name ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
+                title={c.name}
               >
-                <img src={item.image} className="w-full h-full object-cover" alt="Mặc định"/>
+                <img src={c.image} className="w-full h-full object-cover" alt={c.name}/>
               </button>
-              
-              {/* Các nút màu biến thể */}
-              {item.colors.map((c, i) => (
-                <button
-                  key={i}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(c.image); setActiveColor(c.name); }}
-                  onMouseEnter={() => { setCurrentImage(c.image); setActiveColor(c.name); }}
-                  className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === c.name ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
-                  title={c.name}
-                >
-                  <img src={c.image} className="w-full h-full object-cover" alt={c.name}/>
-                </button>
-              ))}
-            </div>
-          )}
-
+            ))}
+          </div>
           <Link to={`/san-pham/${item.slug}`}>
             <h3 className="font-bold text-lg uppercase leading-tight group-hover:text-blue-700 transition-colors line-clamp-2 min-h-[3rem]">
               {item.name}
