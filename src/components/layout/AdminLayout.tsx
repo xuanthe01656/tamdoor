@@ -6,7 +6,10 @@ const AdminLayout = () => {
   const location = useLocation();
   const { currentUser, userRole, logout } = useAuth();
 
-  // --- 1. LOGIC DARK MODE ---
+  // Kiểm tra xem đang ở subdomain admin hay không để điều chỉnh Path
+  const isAdminSubdomain = window.location.hostname.startsWith('admin.');
+
+  // --- 1. LOGIC DARK MODE (Giữ nguyên) ---
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) return savedTheme === 'dark';
@@ -26,17 +29,23 @@ const AdminLayout = () => {
     }
   }, [darkMode]);
 
-  // --- 2. LOGIC MENU ---
+  // --- 2. LOGIC MENU (SỬA ĐƯỜNG DẪN) ---
+  // Hàm bổ sung tiền tố /admin nếu KHÔNG phải subdomain
+  const fixPath = (path: string) => {
+    if (isAdminSubdomain) return path; // Nếu là admin.casardoor.vn thì giữ nguyên /products, /settings
+    return path === '/' ? '/admin' : `/admin${path}`; // Nếu là domain chính thì thêm /admin/products
+  };
+
   const baseMenu = [
-    { path: '/admin', label: '📊 Thống kê (Dashboard)' },
-    { path: '/admin/products', label: '📦 Quản lý Sản phẩm' },
-    { path: '/admin/contacts', label: '📩 Liên hệ & Báo giá' },
-    { path: '/admin/orders', label: '🛒 Đơn hàng (Coming soon)' },
+    { path: '/', label: '📊 Thống kê (Dashboard)' },
+    { path: '/products', label: '📦 Quản lý Sản phẩm' },
+    { path: '/contacts', label: '📩 Liên hệ & Báo giá' },
   ];
 
   const adminMenu = [
-    { path: '/admin/users', label: '👥 Quản lý Nhân sự' },
-    { path: '/admin/settings', label: '⚙️ Cấu hình hệ thống' },
+    { path: '/users', label: '👥 Quản lý Nhân sự' },
+    { path: '/settings', label: '⚙️ Cấu hình hệ thống' },
+    { path: '/profile', label: '👤 Cá nhân' },
   ];
 
   const menuItems = userRole === 'admin' ? [...baseMenu, ...adminMenu] : baseMenu;
@@ -56,14 +65,16 @@ const AdminLayout = () => {
         
         <nav className="p-4 space-y-2 flex-1">
           {menuItems.map((item) => {
-            const isActive = item.path === '/admin' 
-                ? location.pathname === '/admin'
-                : location.pathname.startsWith(item.path);
+            const finalPath = fixPath(item.path);
+            
+            // Logic Active: Kiểm tra xem pathname hiện tại có khớp với link không
+            const isActive = location.pathname === finalPath || 
+                            (finalPath !== '/' && finalPath !== '/admin' && location.pathname.startsWith(finalPath));
 
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                to={finalPath}
                 className={`block px-4 py-3 rounded-lg transition-all font-medium ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 translate-x-1' 
@@ -93,54 +104,40 @@ const AdminLayout = () => {
         {/* HEADER */}
         <header className="bg-white dark:bg-gray-800 shadow-sm h-16 flex items-center justify-between px-6 sticky top-0 z-20 transition-colors duration-300 border-b dark:border-gray-700">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-            <span className="md:hidden">☰</span> 
             Trang Quản Trị
           </h2>
           
           <div className="flex items-center gap-6">
-              <Link to="/" className="text-sm text-blue-600 dark:text-blue-400 hover:underline hidden sm:block font-medium">
+              {/* Sửa link xem website luôn trỏ về domain chính */}
+              <a href="https://casardoor.vn" target="_blank" rel="noreferrer" className="text-sm text-blue-600 dark:text-blue-400 hover:underline hidden sm:block font-medium">
                 Xem Website →
-              </Link>
+              </a>
 
-              {/* Toggle Dark Mode */}
-              <button 
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-600 dark:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                title={darkMode ? "Chuyển sang chế độ Sáng" : "Chuyển sang chế độ Tối"}
-              >
-                {darkMode ? (
-                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                ) : (
-                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                )}
+              <button onClick={() => setDarkMode(!darkMode)} className="p-2 ...">
+                {darkMode ? "☀️" : "🌙"}
               </button>
 
               <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
 
-              {/* Thông tin User (Đã gắn Link Profile) */}
               <div className="flex items-center gap-3 group">
                   <div className="text-right hidden sm:block">
-                     {/* Tên User */}
-                     <Link to="/admin/profile" className="block text-sm font-bold text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        {currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User'}
+                     <Link to={fixPath('/profile')} className="block text-sm font-bold text-gray-800 dark:text-gray-200 hover:text-blue-600">
+                        {currentUser?.displayName || 'Admin'}
                      </Link>
-                     {/* Role */}
-                     <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800 inline-block mt-0.5">
-                        {userRole === 'admin' ? 'Super Admin' : 'Staff'}
+                     <div className="text-[10px] ... uppercase">
+                        {userRole}
                      </div> 
                   </div>
 
-                  {/* Avatar */}
-                  <Link to="/admin/profile" className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-0.5 shadow-md hover:scale-110 transition-transform cursor-pointer">
-                     <div className="w-full h-full bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-blue-700 dark:text-blue-400 font-black text-lg uppercase">
-                        {currentUser?.email?.charAt(0) || 'U'}
-                     </div>
+                  <Link to={fixPath('/profile')} className="w-10 h-10 rounded-full ...">
+                      <div className="w-full h-full ... flex items-center justify-center">
+                        {currentUser?.email?.charAt(0).toUpperCase()}
+                      </div>
                   </Link>
               </div>
           </div>
         </header>
 
-        {/* CONTENT AREA */}
         <div className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-gray-900 transition-colors duration-300 relative">
           <Outlet />
         </div>

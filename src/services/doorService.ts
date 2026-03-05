@@ -265,48 +265,56 @@ export const doorService = {
   // 17. Lấy Settings (Gộp tất cả mọi thứ)
   getSettings: async () => {
     try {
-      // SETTINGS_COLLECTION thường là chuỗi 'settings', document lưu có ID là 'cms'
-      const docRef = doc(db, 'settings', 'cms'); 
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+      // 1. Khởi tạo tham chiếu đến 2 tài liệu khác nhau
+      const cmsRef = doc(db, 'settings', 'cms');
+      const generalRef = doc(db, 'settings', 'general');
+  
+      // 2. Chạy song song cả 2 yêu cầu để tối ưu tốc độ
+      const [cmsSnap, generalSnap] = await Promise.all([
+        getDoc(cmsRef),
+        getDoc(generalRef)
+      ]);
+  
+      // 3. Trích xuất dữ liệu (nếu không tồn tại thì gán object rỗng)
+      const cmsData = cmsSnap.exists() ? cmsSnap.data() : {};
+      const generalData = generalSnap.exists() ? generalSnap.data() : {};
+  
+      // 4. Trả về object tổng hợp với logic Fallback (dữ liệu dự phòng)
+      return {
+        // --- DỮ LIỆU TỪ DOCUMENT 'cms' ---
+        companyInfo: cmsData.companyInfo || MOCK_COMPANY_INFO,
         
-        // Trả về dữ liệu từ Firebase. Nếu trường nào trống, lấy dữ liệu MOCK bù vào.
-        return {
-          companyInfo: data.companyInfo || MOCK_COMPANY_INFO,
-          about: data.about ? {
-            stats: data.about.stats || MOCK_ABOUT.stats,
-            coreValues: data.about.coreValues || MOCK_ABOUT.coreValues,
-            story: data.about.story || MOCK_ABOUT.story
-          } : MOCK_ABOUT,
-          heroSlides: data.heroSlides?.length ? data.heroSlides : MOCK_SLIDES,
-          usps: data.usps?.length ? data.usps : MOCK_ADVANTAGES,
-          projects: data.projects?.length ? data.projects : MOCK_PROJECTS,
-          faqs: data.faqs?.length ? data.faqs : MOCK_FAQS,
-          process: data.process?.length ? data.process : MOCK_PROCESS,
-          warranty: data.warranty || MOCK_WARRANTY,
-          categories: data.categories || ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"], // Dùng cho phần Add Product
-          brands: data.brands || ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
-        };
-      } else {
-        // Nếu Document 'cms' chưa từng được tạo trên Firebase
-        return {
-          companyInfo: MOCK_COMPANY_INFO,
-          about: MOCK_ABOUT,
-          heroSlides: MOCK_SLIDES,
-          usps: MOCK_ADVANTAGES,
-          projects: MOCK_PROJECTS,
-          faqs: MOCK_FAQS,
-          process: MOCK_PROCESS,
-          warranty: MOCK_WARRANTY,
-          categories: ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
-          brands: ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
-        };
-      }
+        about: cmsData.about ? {
+          stats: cmsData.about.stats || MOCK_ABOUT.stats,
+          coreValues: cmsData.about.coreValues || MOCK_ABOUT.coreValues,
+          story: cmsData.about.story || MOCK_ABOUT.story
+        } : MOCK_ABOUT,
+  
+        heroSlides: cmsData.heroSlides?.length ? cmsData.heroSlides : MOCK_SLIDES,
+        usps: cmsData.usps?.length ? cmsData.usps : MOCK_ADVANTAGES,
+        projects: cmsData.projects?.length ? cmsData.projects : MOCK_PROJECTS,
+        faqs: cmsData.faqs?.length ? cmsData.faqs : MOCK_FAQS,
+        process: cmsData.process?.length ? cmsData.process : MOCK_PROCESS,
+        warranty: cmsData.warranty || MOCK_WARRANTY,
+  
+        // --- DỮ LIỆU TỪ DOCUMENT 'general' (Ưu tiên) ---
+        categories: generalData.categories || cmsData.categories || [
+          "Cửa Composite", 
+          "Cửa ABS", 
+          "Cửa Thép Vân Gỗ", 
+          "Phụ Kiện"
+        ],
+        brands: generalData.brands || cmsData.brands || [
+          "KOS", 
+          "CasarDoor", 
+          "Huy Hoàng", 
+          "Việt Tiệp"
+        ]
+      };
+  
     } catch (error) {
-      console.error("Lỗi khi tải cấu hình CMS:", error);
-      // Fallback an toàn khi mất mạng hoặc chưa cấu hình rule Firebase
+      console.error("Lỗi khi tải cấu hình hệ thống:", error);
+      // Trả về toàn bộ Mock Data nếu có lỗi kết nối hoặc phân quyền
       return {
         companyInfo: MOCK_COMPANY_INFO,
         about: MOCK_ABOUT,
@@ -316,8 +324,8 @@ export const doorService = {
         faqs: MOCK_FAQS,
         process: MOCK_PROCESS,
         warranty: MOCK_WARRANTY,
-        categories: [],
-        brands: []
+        categories: ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
+        brands: ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
       };
     }
   },

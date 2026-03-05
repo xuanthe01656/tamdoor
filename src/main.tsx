@@ -3,11 +3,11 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import './index.css'
 
-// --- LAYOUTS ---
+// --- 1. LAYOUTS ---
 import MainLayout from './components/layout/MainLayout' 
 import AdminLayout from './components/layout/AdminLayout'
 
-// --- CLIENT PAGES ---
+// --- 2. CLIENT PAGES ---
 import HomePage from './pages/client/HomePage'
 import ClientProductList from './pages/client/ProductList' 
 import AboutPage from './pages/client/AboutPage'
@@ -17,7 +17,7 @@ import ProcessPage from './pages/client/ProcessPage'
 import FAQPage from './pages/client/FAQPage'
 import ProductDetail from './pages/client/ProductDetail';
 
-// --- ADMIN PAGES ---
+// --- 3. ADMIN PAGES ---
 import Dashboard from './pages/admin/Dashboard'
 import AdminProductList from './pages/admin/ProductList'
 import ProductAdd from './pages/admin/ProductAdd'
@@ -27,19 +27,18 @@ import ContactList from './pages/admin/ContactList';
 import UserList from './pages/admin/UserList';
 import ProfilePage from './pages/admin/ProfilePage'
 
-// --- AUTH ---
+// --- 4. AUTH & PROTECTION ---
 import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 
-// --- LOGIC NHẬN DIỆN SUBDOMAIN ---
+// --- 5. LOGIC NHẬN DIỆN SUBDOMAIN ---
 const hostname = window.location.hostname;
-// Kiểm tra xem có phải đang truy cập qua admin.casardoor.vn hay không
 const isAdminSubdomain = hostname.startsWith('admin.');
 
-// Cấu hình các Route dành riêng cho Admin (Dùng cho subdomain admin.*)
-const adminRoutes = [
+// Cấu hình Route cho Subdomain Admin (admin.casardoor.vn)
+const adminSubdomainRoutes = [
   {
     path: "/login",
     element: <LoginPage />
@@ -48,10 +47,11 @@ const adminRoutes = [
     element: <ProtectedRoute />, 
     children: [
       {
-        path: "/", // Ở subdomain admin, "/" chính là Dashboard
+        path: "/", 
         element: <AdminLayout />,
         children: [
           { index: true, element: <Dashboard /> }, 
+          // ĐỂ Ý: Các path này KHÔNG có dấu "/" ở đầu nếu là con của "/"
           { path: "products", element: <AdminProductList /> },
           { path: "products/new", element: <ProductAdd /> },
           { path: "products/edit/:id", element: <ProductEdit /> },
@@ -68,12 +68,11 @@ const adminRoutes = [
       }
     ]
   },
-  // Redirect mọi path lạ ở subdomain admin về root (Dashboard)
   { path: "*", element: <Navigate to="/" replace /> }
 ];
 
-// Cấu hình các Route dành cho Client (casardoor.vn)
-const clientRoutes = [
+// Cấu hình Route cho Domain chính (casardoor.vn)
+const clientDomainRoutes = [
   {
     path: "/",
     element: <MainLayout />,
@@ -89,21 +88,35 @@ const clientRoutes = [
     ],
   },
   { path: "/login", element: <LoginPage /> },
-  // Vẫn giữ đường dẫn /admin cho domain chính nếu bạn muốn
+  // Vẫn giữ đường dẫn /admin/ cho domain chính để dự phòng
   {
     path: "/admin",
     element: <ProtectedRoute />,
     children: [
-        { 
-            element: <AdminLayout />, 
-            children: [{ index: true, element: <Dashboard /> }, /* ... các sub-route khác nếu cần */] 
-        }
+      {
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "products", element: <AdminProductList /> },
+          { path: "products/new", element: <ProductAdd /> },
+          { path: "products/edit/:id", element: <ProductEdit /> },
+          { path: "contacts", element: <ContactList /> },
+          { path: "profile", element: <ProfilePage /> },
+          {
+            element: <AdminRoute />,
+            children: [
+               { path: "users", element: <UserList /> },
+               { path: "settings", element: <Settings /> }
+            ]
+          }
+        ]
+      }
     ]
   }
 ];
 
-// Khởi tạo router dựa trên Hostname
-const router = createBrowserRouter(isAdminSubdomain ? adminRoutes : clientRoutes);
+// Quyết định dùng bộ Route nào dựa trên URL
+const router = createBrowserRouter(isAdminSubdomain ? adminSubdomainRoutes : clientDomainRoutes);
 
 const rootElement = document.getElementById("root") as HTMLElement;
 if (rootElement) {

@@ -9,27 +9,26 @@ const ITEMS_PER_PAGE = 8;
 const AdminProductList = () => {
   const navigate = useNavigate();
   
+  // --- LOGIC NHẬN DIỆN SUBDOMAIN ---
+  const isAdminSubdomain = window.location.hostname.startsWith('admin.');
+  const fixPath = (path: string) => isAdminSubdomain ? path : `/admin${path}`;
+
   // --- STATE ---
-  const [allProducts, setAllProducts] = useState<Door[]>([]); // Lưu gốc toàn bộ
+  const [allProducts, setAllProducts] = useState<Door[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // State bộ lọc
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
-  const [categories, setCategories] = useState<string[]>([]); // Để đổ vào dropdown
-
-  // State phân trang
+  const [categories, setCategories] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // --- 1. LẤY DỮ LIỆU ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Lấy sản phẩm
         const data = await doorService.getAllProducts();
+        // Sắp xếp mới nhất lên đầu
         setAllProducts(data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
 
-        // Lấy danh mục từ Settings (để làm bộ lọc)
         const settings = await doorService.getSettings();
         if (settings.categories) setCategories(settings.categories);
       } catch (error) {
@@ -41,93 +40,83 @@ const AdminProductList = () => {
     fetchData();
   }, []);
 
-  // --- 2. XỬ LÝ LỌC & TÌM KIẾM (Client-side) ---
+  // --- 2. LỌC & TÌM KIẾM ---
   const filteredProducts = useMemo(() => {
     return allProducts.filter(product => {
-      // Lọc theo tên
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      // Lọc theo danh mục
       const matchesCategory = filterCategory === 'All' || product.category === filterCategory;
-      
       return matchesSearch && matchesCategory;
     });
   }, [allProducts, searchTerm, filterCategory]);
 
-  // --- 3. XỬ LÝ PHÂN TRANG ---
+  // --- 3. PHÂN TRANG ---
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const currentProducts = filteredProducts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Reset về trang 1 khi filter thay đổi
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterCategory]);
 
   // --- 4. HÀM XỬ LÝ ---
   const handleDelete = async (id: string) => {
-    if (!window.confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa? Hành động này không thể hoàn tác!")) return;
+    if (!window.confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
 
     const success = await doorService.deleteProduct(id);
     if (success) {
       setAllProducts(prev => prev.filter(item => item.id !== id));
       alert("✅ Đã xóa thành công!");
-    } else {
-      alert("❌ Xóa thất bại.");
     }
   };
 
   const handleEdit = (id: string) => {
-    navigate(`/admin/products/edit/${id}`);
+    navigate(fixPath(`/products/edit/${id}`)); // FIX PATH THEO SUBDOMAIN
   };
 
-  if (loading) return <div className="p-10 text-center text-gray-500 dark:text-gray-400">⏳ Đang tải dữ liệu...</div>;
+  if (loading) return (
+    <div className="p-20 text-center flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="font-bold text-gray-500">⏳ Đang tải danh sách sản phẩm...</p>
+    </div>
+  );
 
   return (
-    // DARK MODE: bg-gray-800 border-gray-700
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 animate-in fade-in duration-500">
       
       {/* HEADER & TOOLBAR */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          {/* DARK MODE: text-white */}
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Quản lý sản phẩm</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Tổng cộng: <span className="font-bold text-blue-600 dark:text-blue-400">{filteredProducts.length}</span> sản phẩm</p>
+          <h1 className="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Quản lý kho hàng</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Hiển thị <span className="font-bold text-blue-600">{filteredProducts.length}</span> sản phẩm
+          </p>
         </div>
         <button 
-          onClick={() => navigate('/admin/products/new')} 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-bold shadow-lg shadow-blue-100 dark:shadow-none transition-all active:scale-95"
+          onClick={() => navigate(fixPath('/products/new'))} // FIX PATH THEO SUBDOMAIN
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-black shadow-xl shadow-blue-200 dark:shadow-none transition-all active:scale-95 text-sm"
         >
-          <span className="text-xl leading-none">+</span> Thêm mới
+          <span className="text-xl">+</span> THÊM SẢN PHẨM
         </button>
       </div>
 
-      {/* BỘ LỌC (SEARCH & FILTER) */}
-      {/* DARK MODE: bg-gray-700/30 border-gray-600 */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-        {/* Tìm kiếm */}
+      {/* BỘ LỌC */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-600">
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">🔍</span>
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên sản phẩm..."
-            // DARK MODE: bg-gray-800 border-gray-600 text-white
-            className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+            placeholder="Tìm theo tên sản phẩm..."
+            className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        {/* Lọc danh mục */}
         <div className="w-full md:w-64">
           <select
-            // DARK MODE: bg-gray-800 border-gray-600 text-white
-            className="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-800 dark:text-white cursor-pointer"
+            className="block w-full py-2.5 px-3 border border-gray-200 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:text-white font-bold cursor-pointer"
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
           >
@@ -140,84 +129,63 @@ const AdminProductList = () => {
       </div>
 
       {/* BẢNG SẢN PHẨM */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700">
+        <table className="w-full text-left">
           <thead>
-            {/* DARK MODE: bg-gray-700 text-gray-300 */}
-            <tr className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs font-bold tracking-wider">
-              <th className="p-4 border-b dark:border-gray-600">Hình ảnh</th>
-              <th className="p-4 border-b dark:border-gray-600">Thông tin sản phẩm</th>
-              <th className="p-4 border-b dark:border-gray-600">Danh mục</th>
-              <th className="p-4 border-b dark:border-gray-600">Giá bán</th>
-              <th className="p-4 border-b dark:border-gray-600 text-center">Thao tác</th>
+            <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-400 dark:text-gray-500 uppercase text-[10px] font-black tracking-widest border-b dark:border-gray-600">
+              <th className="p-4">Ảnh</th>
+              <th className="p-4">Sản phẩm</th>
+              <th className="p-4">Phân loại</th>
+              <th className="p-4 text-right">Giá niêm yết</th>
+              <th className="p-4 text-center">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
             {currentProducts.length > 0 ? (
               currentProducts.map((product) => (
-                // DARK MODE: hover:bg-blue-900/10
-                <tr key={product.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors group">
+                <tr key={product.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
                   <td className="p-4">
-                    <div className="w-16 h-16 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-700 shadow-sm relative">
+                    <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 shadow-inner">
                       <img 
                         src={product.image} 
                         alt={product.name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null; 
-                          target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 100 100'%3E%3Crect fill='%23374151' x='0' y='0' width='100' height='100'/%3E%3Ctext fill='%239ca3af' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='12'%3ENo Img%3C/text%3E%3C/svg%3E";
-                        }}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=No+Img'; }}
                       />
                     </div>
                   </td>
                   <td className="p-4">
-                    {/* DARK MODE: text-white */}
-                    <div className="font-bold text-gray-900 dark:text-white line-clamp-1 text-base">{product.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono flex items-center gap-2">
-                        <span className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">ID: {product.id?.slice(0, 6)}</span>
-                        {/* Nếu có thương hiệu thì hiện */}
-                        {product.specifications?.find(s => s.key === 'Thương hiệu')?.value && (
-                          <span className="text-blue-600 dark:text-blue-400">• {product.specifications.find(s => s.key === 'Thương hiệu')?.value}</span>
-                        )}
-                    </div>
+                    <div className="font-bold text-gray-800 dark:text-white text-sm line-clamp-1">{product.name}</div>
+                    <div className="text-[10px] text-gray-400 font-mono mt-1">ID: {product.id?.slice(-8)}</div>
                   </td>
                   <td className="p-4">
-                    {/* DARK MODE: Cập nhật màu badge trong suốt */}
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter ${
                       product.type === 'door' 
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
-                        : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                        ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20' 
+                        : 'bg-purple-50 text-purple-600 dark:bg-purple-900/20'
                     }`}>
                       {product.category}
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-gray-800 dark:text-gray-200">
+                  <td className="p-4 text-right font-black text-gray-700 dark:text-gray-200 text-sm">
                     {product.price > 0 
                       ? product.price.toLocaleString('vi-VN') + ' đ' 
-                      : <span className="text-red-500 dark:text-red-400 text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">LIÊN HỆ</span>
+                      : <span className="text-red-500">Liên hệ</span>
                     }
                   </td>
-                  <td className="p-4 text-center">
-                    <div className="flex justify-center gap-3">
+                  <td className="p-4">
+                    <div className="flex justify-center gap-2">
                       <button 
                         onClick={() => handleEdit(product.id || '')}
-                        // DARK MODE: hover dark buttons
-                        className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-2 rounded-full transition-all"
-                        title="Chỉnh sửa"
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        ✏️
                       </button>
                       <button 
                         onClick={() => handleDelete(product.id || '')}
-                        className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-full transition-all"
-                        title="Xóa"
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        🗑️
                       </button>
                     </div>
                   </td>
@@ -225,57 +193,68 @@ const AdminProductList = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="p-12 text-center text-gray-400 dark:text-gray-500">
-                  <div className="flex flex-col items-center">
-                    <svg className="w-12 h-12 mb-3 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                    </svg>
-                    <span>Không tìm thấy sản phẩm nào phù hợp.</span>
-                  </div>
-                </td>
+                <td colSpan={5} className="p-12 text-center text-gray-400 italic">Không có dữ liệu phù hợp.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* FOOTER PHÂN TRANG */}
-      {filteredProducts.length > 0 && (
-        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Hiển thị <span className="font-bold text-gray-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> đến <span className="font-bold text-gray-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</span> trong số <span className="font-bold text-gray-900 dark:text-white">{filteredProducts.length}</span> sản phẩm
+      {/* FOOTER PHÂN TRANG NÂNG CẤP */}
+      {filteredProducts.length > ITEMS_PER_PAGE && (
+        <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4 border-t dark:border-gray-700 pt-6">
+          <div className="text-xs text-gray-400 font-medium order-2 md:order-1">
+            Hiển thị <span className="text-gray-900 dark:text-white font-bold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="text-gray-900 dark:text-white font-bold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</span> trong <span className="text-gray-900 dark:text-white font-bold">{filteredProducts.length}</span> sản phẩm
           </div>
           
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1 order-1 md:order-2">
+            {/* Nút Trở về */}
             <button 
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              // DARK MODE: border-gray-600 text-gray-300 hover:bg-gray-700
-              className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 border dark:border-gray-600 rounded-lg disabled:opacity-30 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              Trước
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-               <button
-                 key={page}
-                 onClick={() => setCurrentPage(page)}
-                 className={`w-8 h-8 rounded-md text-sm font-bold transition-colors ${
-                   currentPage === page 
-                   ? 'bg-blue-600 text-white shadow-md' 
-                   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                 }`}
-               >
-                 {page}
-               </button>
-            ))}
 
+            {/* Hiển thị danh sách số trang */}
+            <div className="flex items-center gap-1 mx-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                // Logic: Chỉ hiện trang đầu, trang cuối, và các trang xung quanh trang hiện tại
+                const isNearCurrent = Math.abs(page - currentPage) <= 1;
+                const isFirstOrLast = page === 1 || page === totalPages;
+
+                if (!isNearCurrent && !isFirstOrLast) {
+                  // Hiển thị dấu ba chấm nếu khoảng cách xa
+                  if (page === 2 || page === totalPages - 1) {
+                    return <span key={page} className="px-1 text-gray-400">...</span>;
+                  }
+                  return null;
+                }
+
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-9 h-9 rounded-lg text-xs font-bold transition-all ${
+                      currentPage === page 
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none scale-110' 
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-gray-700 border border-transparent'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Nút Kế tiếp */}
             <button 
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 border dark:border-gray-600 rounded-lg disabled:opacity-30 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              Sau
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>
         </div>
