@@ -68,7 +68,7 @@ const Settings = () => {
         case 'warranty':
             return <WarrantySettings initialData={settingsData?.warranty || { periods: [], conditions: [], refusals: [] }} />;
         case 'category':
-            return <CategoryBrandSettings initialCategories={settingsData?.categories || []} initialBrands={settingsData?.brands || []} />;
+            return <CategoryBrandSettings />
         case 'general':
             return <CompanyInfoSettings initialData={settingsData?.companyInfo} />;
         case 'about':

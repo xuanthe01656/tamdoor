@@ -30,7 +30,7 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="bg-[#0f172a] text-gray-400 pt-20 pb-10 border-t border-white/5">
+    <footer className="bg-[#003D20] text-gray-400 pt-20 pb-10 border-t border-white/5">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
         
         {/* 1. BRAND INFO (ĐÃ SỬA: Logo ảnh + Tên đầy đủ) */}

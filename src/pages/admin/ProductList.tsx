@@ -68,12 +68,9 @@ const AdminProductList = () => {
   // --- 4. HÀM XỬ LÝ CHECKBOX ---
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      // Chọn tất cả sản phẩm ở trang hiện tại
       const currentPageIds = currentProducts.map(p => p.id).filter(Boolean) as string[];
-      // Gộp với những ID đã chọn trước đó (để không mất khi qua trang khác)
       setSelectedIds(Array.from(new Set([...selectedIds, ...currentPageIds])));
     } else {
-      // Bỏ chọn tất cả sản phẩm ở trang hiện tại
       const currentPageIds = currentProducts.map(p => p.id).filter(Boolean) as string[];
       setSelectedIds(selectedIds.filter(id => !currentPageIds.includes(id)));
     }
@@ -92,7 +89,7 @@ const AdminProductList = () => {
     const success = await doorService.deleteProduct(id);
     if (success) {
       setAllProducts(prev => prev.filter(item => item.id !== id));
-      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id)); // Bỏ khỏi list chọn nếu có
+      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id)); 
       alert("✅ Đã xóa thành công!");
     }
   };
@@ -101,7 +98,6 @@ const AdminProductList = () => {
     if (!window.confirm(`⚠️ CẢNH BÁO: Bạn chuẩn bị xóa ${selectedIds.length} sản phẩm. Hành động này không thể hoàn tác!`)) return;
 
     let successCount = 0;
-    // Xóa lần lượt các ID đã chọn
     for (const id of selectedIds) {
       const success = await doorService.deleteProduct(id);
       if (success) successCount++;
@@ -120,7 +116,6 @@ const AdminProductList = () => {
     navigate(fixPath(`/products/edit/${id}`)); 
   };
 
-  // Kiểm tra xem tất cả sản phẩm trang hiện tại đã được chọn chưa
   const isAllCurrentPageSelected = currentProducts.length > 0 && currentProducts.every(p => p.id && selectedIds.includes(p.id));
 
   if (loading) return (
@@ -143,7 +138,6 @@ const AdminProductList = () => {
         </div>
         
         <div className="flex gap-3">
-          {/* Nút Xóa Nhiều hiển thị khi có item được chọn */}
           {selectedIds.length > 0 && (
             <button 
               onClick={handleBulkDelete}
@@ -194,7 +188,6 @@ const AdminProductList = () => {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-400 dark:text-gray-500 uppercase text-[10px] font-black tracking-widest border-b dark:border-gray-600">
-              {/* Cột Checkbox All */}
               <th className="p-4 w-12 text-center">
                 <input 
                   type="checkbox" 
@@ -204,7 +197,7 @@ const AdminProductList = () => {
                 />
               </th>
               <th className="p-4">Ảnh</th>
-              <th className="p-4">Sản phẩm</th>
+              <th className="p-4 w-1/3">Sản phẩm</th>
               <th className="p-4">Phân loại</th>
               <th className="p-4 text-right">Giá niêm yết</th>
               <th className="p-4 text-center">Thao tác</th>
@@ -217,7 +210,6 @@ const AdminProductList = () => {
                 
                 return (
                   <tr key={product.id} className={`${isSelected ? 'bg-blue-50/50 dark:bg-blue-900/20' : 'hover:bg-blue-50/30 dark:hover:bg-blue-900/10'} transition-colors group`}>
-                    {/* Cột Checkbox Từng dòng */}
                     <td className="p-4 text-center">
                       <input 
                         type="checkbox" 
@@ -237,18 +229,29 @@ const AdminProductList = () => {
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="font-bold text-gray-800 dark:text-white text-sm line-clamp-1">{product.name}</div>
+                      <div className="font-bold text-gray-800 dark:text-white text-sm line-clamp-2">{product.name}</div>
                       <div className="text-[10px] text-gray-400 font-mono mt-1">ID: {product.id?.slice(-8)}</div>
                     </td>
+                    
+                    {/* CỘT PHÂN LOẠI ĐÃ ĐƯỢC THIẾT KẾ LẠI */}
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter ${
-                        product.type === 'door' 
-                          ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20' 
-                          : 'bg-purple-50 text-purple-600 dark:bg-purple-900/20'
-                      }`}>
-                        {product.category}
-                      </span>
+                      <div className="flex flex-col gap-1.5 items-start">
+                        {/* Tag: Loại sản phẩm */}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${
+                          product.type === 'door' 
+                            ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' 
+                            : 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800'
+                        }`}>
+                          {product.type === 'door' ? '🚪 Cửa' : '🔧 Phụ kiện'}
+                        </span>
+                        
+                        {/* Text: Danh mục (Category) - Hiển thị đúng chữ gốc, không ép viết hoa toàn bộ */}
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                          {product.category || 'Chưa phân loại'}
+                        </span>
+                      </div>
                     </td>
+
                     <td className="p-4 text-right font-black text-gray-700 dark:text-gray-200 text-sm">
                       {product.price > 0 
                         ? product.price.toLocaleString('vi-VN') + ' đ' 
@@ -283,7 +286,7 @@ const AdminProductList = () => {
         </table>
       </div>
 
-      {/* FOOTER PHÂN TRANG NÂNG CẤP */}
+      {/* FOOTER PHÂN TRANG */}
       {filteredProducts.length > ITEMS_PER_PAGE && (
         <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4 border-t dark:border-gray-700 pt-6">
           <div className="text-xs text-gray-400 font-medium order-2 md:order-1">

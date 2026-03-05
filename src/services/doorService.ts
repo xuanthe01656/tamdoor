@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail,updateProfile, updatePassword, User } from "firebase/auth";
-import { firebaseConfig, db } from "../config/firebase"; // Gộp import cho gọn
+import { firebaseConfig, db } from "../config/firebase";
 
 // Import Interfaces
 import { Door, HeroSlide, USP, Project, FAQ, ProcessStep, WarrantyPolicy, WebsiteInfo, SystemSettings } from '../interfaces/door';
@@ -42,7 +42,14 @@ export interface PaginatedResult<T> {
 
 const COLLECTION_NAME = 'products';
 const SETTINGS_COLLECTION = 'settings';
-const SETTINGS_DOC_ID = 'general';
+const CMS_DOC_ID = 'cms'; // Chỉ định duy nhất 1 nguồn là CMS
+
+// ==========================================
+// CẤU HÌNH BỘ NHỚ ĐỆM (CACHE) TỐI ƯU FIREBASE READS
+// ==========================================
+let settingsCachePromise: Promise<any> | null = null;
+let lastSettingsFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // Cache lưu trong 5 phút (có thể chỉnh sửa)
 
 // --- SERVICE LOGIC ---
 export const doorService = {
@@ -50,7 +57,6 @@ export const doorService = {
   // A. NHÓM API SẢN PHẨM (REALTIME FIREBASE)
   // ==========================================
 
-  // 1. Lấy toàn bộ sản phẩm
   getAllProducts: async (): Promise<Door[]> => {
     try {
       const snapshot = await getDocs(collection(db, COLLECTION_NAME));
@@ -61,7 +67,6 @@ export const doorService = {
     }
   },
 
-  // 2. Lấy sản phẩm theo type
   getProductsByType: async (type: 'door' | 'accessory'): Promise<Door[]> => {
     try {
       const q = query(collection(db, COLLECTION_NAME), where("type", "==", type));
@@ -73,7 +78,6 @@ export const doorService = {
     }
   },
 
-  // 3. Lấy chi tiết sản phẩm theo slug
   getProductBySlug: async (slug: string): Promise<Door | undefined> => {
     try {
       const q = query(collection(db, COLLECTION_NAME), where("slug", "==", slug), fireLimit(1));
@@ -89,7 +93,6 @@ export const doorService = {
     }
   },
 
-  // 4. Lấy sản phẩm nổi bật
   getFeaturedProducts: async (limitVal: number = 8): Promise<Door[]> => {
     try {
       const q = query(
@@ -111,7 +114,6 @@ export const doorService = {
     }
   },
 
-  // 5. Tìm kiếm sản phẩm
   searchProducts: async (keyword: string): Promise<Door[]> => {
     try {
       const snapshot = await getDocs(collection(db, COLLECTION_NAME));
@@ -128,7 +130,6 @@ export const doorService = {
     }
   },
 
-  // 6. Lấy danh sách phân trang
   getProductsPaginated: async (
     type: 'door' | 'accessory', 
     page: number = 1, 
@@ -158,7 +159,6 @@ export const doorService = {
   // ==========================================
   // B. NHÓM API CMS (DATA ĐỘNG TỪ DB)
   // ==========================================
-  // Logic chung: Gọi getSettings -> Nếu DB có thì trả về -> Nếu không có thì trả về MOCK
 
   getHeroSlides: async (): Promise<HeroSlide[]> => {
     const settings = await doorService.getSettings();
@@ -195,7 +195,6 @@ export const doorService = {
   // C. NHÓM API QUẢN TRỊ SẢN PHẨM (CRUD)
   // ==========================================
 
-  // 13. Xóa sản phẩm
   deleteProduct: async (id: string): Promise<boolean> => {
     try {
       if (!id) return false;
@@ -207,7 +206,6 @@ export const doorService = {
     }
   },
 
-  // 14. Thêm sản phẩm mới
   addProduct: async (productData: any): Promise<boolean> => {
     try {
       const dataToSave = {
@@ -228,7 +226,6 @@ export const doorService = {
     }
   },
 
-  // 15. Lấy chi tiết 1 sản phẩm
   getProductById: async (id: string) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
@@ -243,7 +240,6 @@ export const doorService = {
     }
   },
 
-  // 16. Cập nhật sản phẩm
   updateProduct: async (id: string, data: any) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
@@ -259,99 +255,90 @@ export const doorService = {
   },
 
   // ==========================================
-  // D. NHÓM API CẤU HÌNH & CMS (SETTINGS) - ĐÃ NÂNG CẤP
+  // D. NHÓM API CẤU HÌNH & CMS (SETTINGS) - TỐI ƯU CACHE
   // ==========================================
 
-  // 17. Lấy Settings (Gộp tất cả mọi thứ)
-  getSettings: async () => {
-    try {
-      // 1. Khởi tạo tham chiếu đến 2 tài liệu khác nhau
-      const cmsRef = doc(db, 'settings', 'cms');
-      const generalRef = doc(db, 'settings', 'general');
-  
-      // 2. Chạy song song cả 2 yêu cầu để tối ưu tốc độ
-      const [cmsSnap, generalSnap] = await Promise.all([
-        getDoc(cmsRef),
-        getDoc(generalRef)
-      ]);
-  
-      // 3. Trích xuất dữ liệu (nếu không tồn tại thì gán object rỗng)
-      const cmsData = cmsSnap.exists() ? cmsSnap.data() : {};
-      const generalData = generalSnap.exists() ? generalSnap.data() : {};
-  
-      // 4. Trả về object tổng hợp với logic Fallback (dữ liệu dự phòng)
-      return {
-        // --- DỮ LIỆU TỪ DOCUMENT 'cms' ---
-        companyInfo: cmsData.companyInfo || MOCK_COMPANY_INFO,
-        
-        about: cmsData.about ? {
-          stats: cmsData.about.stats || MOCK_ABOUT.stats,
-          coreValues: cmsData.about.coreValues || MOCK_ABOUT.coreValues,
-          story: cmsData.about.story || MOCK_ABOUT.story
-        } : MOCK_ABOUT,
-  
-        heroSlides: cmsData.heroSlides?.length ? cmsData.heroSlides : MOCK_SLIDES,
-        usps: cmsData.usps?.length ? cmsData.usps : MOCK_ADVANTAGES,
-        projects: cmsData.projects?.length ? cmsData.projects : MOCK_PROJECTS,
-        faqs: cmsData.faqs?.length ? cmsData.faqs : MOCK_FAQS,
-        process: cmsData.process?.length ? cmsData.process : MOCK_PROCESS,
-        warranty: cmsData.warranty || MOCK_WARRANTY,
-  
-        // --- DỮ LIỆU TỪ DOCUMENT 'general' (Ưu tiên) ---
-        categories: generalData.categories || cmsData.categories || [
-          "Cửa Composite", 
-          "Cửa ABS", 
-          "Cửa Thép Vân Gỗ", 
-          "Phụ Kiện"
-        ],
-        brands: generalData.brands || cmsData.brands || [
-          "KOS", 
-          "CasarDoor", 
-          "Huy Hoàng", 
-          "Việt Tiệp"
-        ]
-      };
-  
-    } catch (error) {
-      console.error("Lỗi khi tải cấu hình hệ thống:", error);
-      // Trả về toàn bộ Mock Data nếu có lỗi kết nối hoặc phân quyền
-      return {
-        companyInfo: MOCK_COMPANY_INFO,
-        about: MOCK_ABOUT,
-        heroSlides: MOCK_SLIDES,
-        usps: MOCK_ADVANTAGES,
-        projects: MOCK_PROJECTS,
-        faqs: MOCK_FAQS,
-        process: MOCK_PROCESS,
-        warranty: MOCK_WARRANTY,
-        categories: ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
-        brands: ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
-      };
+  getSettings: async (forceRefresh = false) => {
+    const now = Date.now();
+
+    // KIỂM TRA CACHE: Trả về dữ liệu từ RAM nếu có và chưa hết hạn
+    if (!forceRefresh && settingsCachePromise && (now - lastSettingsFetchTime < CACHE_DURATION)) {
+      console.log("⚡ [Cache Hit] Lấy dữ liệu CMS từ RAM (Tiết kiệm 1 Read Firebase)");
+      return settingsCachePromise;
     }
+
+    console.log("🔥 [Cache Miss] Bắt đầu gọi lên Firebase để lấy dữ liệu CMS mới...");
+    lastSettingsFetchTime = now;
+
+    // GỌI FIREBASE & LƯU VÀO CACHE: Mọi component gọi cùng lúc sẽ chia sẻ chung Promise này
+    settingsCachePromise = (async () => {
+      try {
+        const cmsRef = doc(db, SETTINGS_COLLECTION, CMS_DOC_ID);
+        const cmsSnap = await getDoc(cmsRef);
+        const cmsData = cmsSnap.exists() ? cmsSnap.data() : {};
+    
+        return {
+          companyInfo: cmsData.companyInfo || MOCK_COMPANY_INFO,
+          
+          about: cmsData.about ? {
+            stats: cmsData.about.stats || MOCK_ABOUT.stats,
+            coreValues: cmsData.about.coreValues || MOCK_ABOUT.coreValues,
+            story: cmsData.about.story || MOCK_ABOUT.story
+          } : MOCK_ABOUT,
+    
+          heroSlides: cmsData.heroSlides?.length ? cmsData.heroSlides : MOCK_SLIDES,
+          usps: cmsData.usps?.length ? cmsData.usps : MOCK_ADVANTAGES,
+          projects: cmsData.projects?.length ? cmsData.projects : MOCK_PROJECTS,
+          faqs: cmsData.faqs?.length ? cmsData.faqs : MOCK_FAQS,
+          process: cmsData.process?.length ? cmsData.process : MOCK_PROCESS,
+          warranty: cmsData.warranty || MOCK_WARRANTY,
+    
+          categories: cmsData.categories || ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
+          doorCategories: cmsData.doorCategories || [],
+          accessoryCategories: cmsData.accessoryCategories || [],
+          brands: cmsData.brands || ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
+        };
+    
+      } catch (error) {
+        console.error("Lỗi khi tải cấu hình hệ thống:", error);
+        // Trả về Mock Data nếu có lỗi kết nối
+        return {
+          companyInfo: MOCK_COMPANY_INFO, about: MOCK_ABOUT, heroSlides: MOCK_SLIDES,
+          usps: MOCK_ADVANTAGES, projects: MOCK_PROJECTS, faqs: MOCK_FAQS,
+          process: MOCK_PROCESS, warranty: MOCK_WARRANTY,
+          categories: ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
+          doorCategories: [], accessoryCategories: [], brands: ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
+        };
+      }
+    })();
+
+    return settingsCachePromise;
   },
 
-  // 18. Hàm lưu Settings chung (Core)
+  // LƯU CẤU HÌNH & XÓA CACHE ĐỂ ĐỒNG BỘ
   saveSettings: async (data: Partial<SystemSettings>) => {
     try {
-      await setDoc(doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID), data, { merge: true });
+      await setDoc(doc(db, SETTINGS_COLLECTION, CMS_DOC_ID), data, { merge: true });
+      
+      // Reset Cache ngay lập tức để lần fetch tiếp theo tải dữ liệu mới
+      settingsCachePromise = null;
+      lastSettingsFetchTime = 0;
+      
       return true;
     } catch (error) {
       console.error("Lỗi lưu settings:", error);
       return false;
     }
   },
+
   updateSettings: async (newData: any) => {
     try {
-      const docRef = doc(db, 'settings', 'cms');
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        // Nếu document đã tồn tại, dùng updateDoc để ghi đè hoặc thêm trường mới (merge)
-        await updateDoc(docRef, newData);
-      } else {
-        // Nếu document chưa tồn tại (lần đầu tiên bấm Lưu), dùng setDoc
-        await setDoc(docRef, newData);
-      }
+      await setDoc(doc(db, SETTINGS_COLLECTION, CMS_DOC_ID), newData, { merge: true });
+      
+      // Reset Cache
+      settingsCachePromise = null;
+      lastSettingsFetchTime = 0;
+      
       return true;
     } catch (error) {
       console.error("Lỗi khi cập nhật cấu hình CMS:", error);
@@ -359,6 +346,7 @@ export const doorService = {
       return false;
     }
   },
+
   // --- CÁC HÀM WRAPPER CHO CMS ---
   saveWebsiteInfo: async (info: WebsiteInfo) => {
     return doorService.saveSettings({ websiteInfo: info });
@@ -392,7 +380,6 @@ export const doorService = {
   // E. NHÓM API UPLOAD & EXCEL
   // ==========================================
 
-  // 20. Upload ảnh
   uploadImage: async (file: File): Promise<string | null> => {
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
@@ -423,7 +410,6 @@ export const doorService = {
     }
   },
 
-  // 21. Bulk Insert
   addMultipleProducts: async (products: any[]) => {
     let successCount = 0;
     let failCount = 0;
@@ -438,7 +424,6 @@ export const doorService = {
     return { successCount, failCount };
   },
 
-  // 22. Gửi liên hệ
   sendContactRequest: async (data: { name: string; phone: string; email?: string; message: string }) => {
     try {
       await addDoc(collection(db, 'contacts'), {
@@ -457,7 +442,6 @@ export const doorService = {
   // F. NHÓM API QUẢN LÝ LIÊN HỆ (ADMIN)
   // ==========================================
 
-  // 23. Lấy danh sách liên hệ
   getAllContacts: async () => {
     try {
       const q = query(collection(db, 'contacts'), orderBy('createdAt', 'desc'));
@@ -469,7 +453,6 @@ export const doorService = {
     }
   },
 
-  // 24. Cập nhật trạng thái
   updateContactStatus: async (id: string, status: 'new' | 'contacted' | 'spam') => {
     try {
       const docRef = doc(db, 'contacts', id);
@@ -481,7 +464,6 @@ export const doorService = {
     }
   },
 
-  // 25. Xóa liên hệ
   deleteContact: async (id: string) => {
     try {
       await deleteDoc(doc(db, 'contacts', id));
@@ -496,7 +478,6 @@ export const doorService = {
   // G. NHÓM API QUẢN LÝ USER (ADMIN ONLY)
   // ==========================================
 
-  // 26. Lấy danh sách nhân viên
   getAllUsers: async () => {
     try {
       const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -508,7 +489,6 @@ export const doorService = {
     }
   },
 
-  // 27. Tạo User mới
   createUser: async (userData: { email: string; pass: string; name: string; role: string }) => {
     try {
       const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
@@ -532,7 +512,6 @@ export const doorService = {
     }
   },
 
-  // 28. Xóa User
   deleteUser: async (id: string) => {
     try {
       await deleteDoc(doc(db, 'users', id));
@@ -543,7 +522,6 @@ export const doorService = {
     }
   },
 
-  // 29. Cập nhật User
   updateUser: async (uid: string, data: { name: string; role: string }) => {
     try {
       const docRef = doc(db, 'users', uid);
@@ -555,7 +533,6 @@ export const doorService = {
     }
   },
 
-  // 30. Reset Password
   sendPasswordReset: async (email: string) => {
     try {
       const auth = getAuth();
@@ -567,16 +544,12 @@ export const doorService = {
       return false;
     }
   },
-  // 31. Cập nhật thông tin cá nhân (Tên hiển thị)
+
   updateCurrentUser: async (user: User, displayName: string) => {
     try {
-      // 1. Update trong Firebase Auth (để hiển thị trên Header ngay)
       await updateProfile(user, { displayName: displayName });
-      
-      // 2. Update trong Firestore (để lưu trong danh sách nhân viên)
       const docRef = doc(db, 'users', user.uid);
       await updateDoc(docRef, { name: displayName });
-      
       return true;
     } catch (error) {
       console.error("Lỗi update profile:", error);
@@ -584,7 +557,6 @@ export const doorService = {
     }
   },
 
-  // 32. Đổi mật khẩu
   changePassword: async (user: User, newPass: string) => {
     try {
       await updatePassword(user, newPass);

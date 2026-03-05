@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { doorService } from '../../services/doorService';
-import { Door, ProductSpecification, ProductColor } from '../../interfaces/door'; // Đã thêm ProductColor
+import { Door, ProductSpecification, ProductColor } from '../../interfaces/door';
 
 const ProductAdd = () => {
   const navigate = useNavigate();
@@ -23,13 +23,15 @@ const ProductAdd = () => {
   const fixPath = (path: string) => isAdminSubdomain ? path : `/admin${path}`;
 
   // --- 2. STATE DỮ LIỆU CẤU HÌNH ---
-  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [doorCategoryOptions, setDoorCategoryOptions] = useState<string[]>([]);
+  const [accessoryCategoryOptions, setAccessoryCategoryOptions] = useState<string[]>([]);
   const [brandOptions, setBrandOptions] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchSettings = async () => {
       const settings = await doorService.getSettings();
-      if (settings.categories) setCategoryOptions(settings.categories);
+      if (settings.doorCategories) setDoorCategoryOptions(settings.doorCategories);
+      if (settings.accessoryCategories) setAccessoryCategoryOptions(settings.accessoryCategories);
       if (settings.brands) setBrandOptions(settings.brands);
     };
     fetchSettings();
@@ -61,19 +63,21 @@ const ProductAdd = () => {
 
   const [features, setFeatures] = useState<string[]>(['Chống nước tuyệt đối 100%', 'Không cong vênh, co ngót']);
   const [specs, setSpecs] = useState<ProductSpecification[]>(DOOR_SPECS_TEMPLATE);
-  const [colors, setColors] = useState<ProductColor[]>([]); // STATE QUẢN LÝ MÀU SẮC
+  const [colors, setColors] = useState<ProductColor[]>([]);
 
-  // Auto-select Category
+  // Lấy ra danh sách danh mục đúng với loại sản phẩm hiện tại
+  const currentCategoryOptions = formData.type === 'door' ? doorCategoryOptions : accessoryCategoryOptions;
+
+  // Tự động reset Specs và Category khi người dùng đổi Loại sản phẩm
   useEffect(() => {
-    if (categoryOptions.length > 0 && !formData.category) {
-      setFormData(prev => ({ ...prev, category: categoryOptions[0] }));
+    if (formData.type === 'door') {
+      setSpecs(DOOR_SPECS_TEMPLATE);
+    } else {
+      setSpecs(ACCESSORY_SPECS_TEMPLATE);
     }
-  }, [categoryOptions]);
-
-  // Auto-switch Template
-  useEffect(() => {
-    if (formData.type === 'door') setSpecs(DOOR_SPECS_TEMPLATE);
-    else setSpecs(ACCESSORY_SPECS_TEMPLATE);
+    // Xóa lựa chọn category cũ để tránh lỗi dữ liệu chéo
+    setFormData(prev => ({ ...prev, category: '' }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.type]);
 
   // --- HANDLERS ---
@@ -142,6 +146,7 @@ const ProductAdd = () => {
 
     setLoading(true);
     const finalProducts: any[] = [];
+    
     for (let i = 0; i < excelData.length; i++) {
         const item: any = excelData[i];
         setImportStatus(`Đang xử lý ${i + 1}/${excelData.length}: ${item['Tên sản phẩm']}`);
@@ -171,7 +176,6 @@ const ProductAdd = () => {
                 const [colorName, colorImgName] = colorStr.split(':');
                 if (colorName && colorImgName) {
                     let colorImgUrl = '';
-                    // Tìm file ảnh màu trong đống file được chọn ở Bước 2
                     const matchingColorFile = Array.from(files).find(f => 
                         f.name.toLowerCase().trim() === colorImgName.toString().toLowerCase().trim()
                     );
@@ -189,16 +193,22 @@ const ProductAdd = () => {
             }
         }
 
+        // Nhận diện loại sản phẩm & Danh mục mặc định
+        const itemType = (item['Loại']?.toLowerCase().includes('phụ kiện')) ? 'accessory' : 'door';
+        const fallbackCategory = itemType === 'door' 
+          ? (doorCategoryOptions[0] || 'Cửa Mặc định') 
+          : (accessoryCategoryOptions[0] || 'Phụ kiện Mặc định');
+
         finalProducts.push({
             name: item['Tên sản phẩm'] || 'Sản phẩm mới',
             price: item['Giá'] || 0,
-            category: item['Danh mục'] || (categoryOptions[0] || 'Khác'),
-            type: (item['Loại']?.toLowerCase().includes('phụ kiện')) ? 'accessory' : 'door',
+            category: item['Danh mục'] || fallbackCategory,
+            type: itemType,
             image: imageUrl || 'https://via.placeholder.com/400x600?text=No+Image',
             description: item['Mô tả'] || '',
             features: item['Đặc điểm'] ? item['Đặc điểm'].toString().split(';') : [],
-            specifications: parsedSpecs.length ? parsedSpecs : (item['Loại']?.toLowerCase().includes('phụ kiện') ? ACCESSORY_SPECS_TEMPLATE : DOOR_SPECS_TEMPLATE),
-            colors: parsedColors // ĐÃ THÊM MẢNG MÀU SẮC VÀO ĐÂY
+            specifications: parsedSpecs.length ? parsedSpecs : (itemType === 'accessory' ? ACCESSORY_SPECS_TEMPLATE : DOOR_SPECS_TEMPLATE),
+            colors: parsedColors 
         });
     }
 
@@ -220,7 +230,7 @@ const ProductAdd = () => {
         ...formData, 
         features: features.filter(f => f.trim() !== ''), 
         specifications: specs.filter(s => s.key.trim() !== '' && s.value.trim() !== ''),
-        colors: colors.filter(c => c.name.trim() !== '' && c.image !== '') // Lọc bỏ màu chưa nhập thông tin
+        colors: colors.filter(c => c.name.trim() !== '' && c.image !== '') 
     };
     const success = await doorService.addProduct(finalData);
     setLoading(false);
@@ -381,8 +391,9 @@ const ProductAdd = () => {
 
             <div className="mb-4">
                <label className="block text-xs font-black uppercase text-gray-400 mb-2">Danh mục</label>
-               <select name="category" value={formData.category} onChange={handleChange} className="w-full border dark:border-gray-600 p-2 rounded dark:bg-gray-700 dark:text-white font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                   {categoryOptions.map((c,i)=><option key={i} value={c}>{c}</option>)}
+               <select name="category" value={formData.category || ''} onChange={handleChange} className="w-full border dark:border-gray-600 p-2 rounded dark:bg-gray-700 dark:text-white font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                   <option value="">-- Chọn danh mục --</option>
+                   {currentCategoryOptions.map((cat, i) => (<option key={i} value={cat}>{cat}</option>))}
                </select>
             </div>
 

@@ -15,8 +15,10 @@ const ProductEdit = () => {
   const fixPath = (path: string) => isAdminSubdomain ? path : `/admin${path}`;
 
   // State cấu hình & Dữ liệu
-  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [doorCategoryOptions, setDoorCategoryOptions] = useState<string[]>([]);
+  const [accessoryCategoryOptions, setAccessoryCategoryOptions] = useState<string[]>([]);
   const [brandOptions, setBrandOptions] = useState<string[]>([]);
+  
   const [formData, setFormData] = useState<Partial<Door>>({
     name: '', type: 'door', category: '', price: 0, image: '', description: '',
   });
@@ -31,23 +33,25 @@ const ProductEdit = () => {
       try {
         // Lấy settings từ CMS
         const settings = await doorService.getSettings();
-        if (settings.categories) setCategoryOptions(settings.categories);
+        if (settings.doorCategories) setDoorCategoryOptions(settings.doorCategories);
+        if (settings.accessoryCategories) setAccessoryCategoryOptions(settings.accessoryCategories);
         if (settings.brands) setBrandOptions(settings.brands);
 
         // Lấy thông tin sản phẩm cần sửa
         const product = await doorService.getProductById(id);
         if (product) {
+          // FIX: Đảm bảo không có trường nào bị undefined để tránh lỗi Form Uncontrolled
           setFormData({
-            name: product.name,
-            type: product.type,
-            category: product.category,
-            price: product.price,
-            image: product.image,
+            name: product.name || '',
+            type: product.type || 'door',
+            category: product.category || '', // Đảm bảo luôn là string
+            price: product.price || 0,
+            image: product.image || '',
             description: product.description || '',
           });
           setFeatures(product.features || []);
           setSpecs(product.specifications || []);
-          setColors(product.colors || []); // Nạp dữ liệu màu sắc nếu có
+          setColors(product.colors || []); 
         } else {
           alert("❌ Không tìm thấy sản phẩm!");
           navigate(fixPath('/products'));
@@ -68,17 +72,13 @@ const ProductEdit = () => {
     setFormData(prev => ({ ...prev, [name]: name === 'price' ? Number(value) : value }));
   };
 
-  // 👇 ĐÃ FIX: Sửa logic hàm handleBrandChange
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setSpecs(prev => {
-      // Kiểm tra xem đã có spec 'Thương hiệu' chưa
       const hasBrand = prev.some(s => s.key === 'Thương hiệu');
       if (hasBrand) {
-        // Nếu có rồi thì cập nhật giá trị
         return prev.map(s => s.key === 'Thương hiệu' ? { ...s, value: val } : s);
       } else {
-        // Nếu chưa có thì thêm mới vào mảng
         return [...prev, { key: 'Thương hiệu', value: val }];
       }
     });
@@ -118,11 +118,14 @@ const ProductEdit = () => {
     if (!formData.name || !formData.image) return alert("Vui lòng nhập Tên và Ảnh!");
 
     setSaving(true);
+    
+    // FIX: Ép buộc ghi nhận category, kể cả khi giá trị là chuỗi rỗng
     const finalData = {
       ...formData,
+      category: formData.category || '', 
       features: features.filter(f => f.trim() !== ''),
       specifications: specs.filter(s => s.key.trim() !== '' && s.value.trim() !== ''),
-      colors: colors.filter(c => c.name.trim() !== '' && c.image !== '') // Lọc bỏ màu trống
+      colors: colors.filter(c => c.name.trim() !== '' && c.image !== '') 
     };
 
     const success = await doorService.updateProduct(id, finalData);
@@ -133,6 +136,9 @@ const ProductEdit = () => {
       navigate(fixPath('/products'));
     }
   };
+
+  // Xác định danh sách option cần hiển thị dựa vào Loại sản phẩm đang chọn
+  const currentCategoryOptions = formData.type === 'door' ? doorCategoryOptions : accessoryCategoryOptions;
 
   if (loading) return (
     <div className="p-20 text-center flex flex-col items-center justify-center">
@@ -279,19 +285,31 @@ const ProductEdit = () => {
               <div>
                 <label className="block text-xs font-black uppercase text-gray-400 mb-2">Loại sản phẩm</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setFormData({...formData, type: 'door'})} className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-xs ${formData.type === 'door' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 dark:border-gray-600 text-gray-400'}`}>🚪 CỬA</button>
-                  <button type="button" onClick={() => setFormData({...formData, type: 'accessory'})} className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-xs ${formData.type === 'accessory' ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-gray-100 dark:border-gray-600 text-gray-400'}`}>🔧 PHỤ KIỆN</button>
+                  <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, type: 'door', category: ''})} 
+                    className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-xs ${formData.type === 'door' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 dark:border-gray-600 text-gray-400'}`}
+                  >
+                    🚪 CỬA
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, type: 'accessory', category: ''})} 
+                    className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-xs ${formData.type === 'accessory' ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-gray-100 dark:border-gray-600 text-gray-400'}`}
+                  >
+                    🔧 PHỤ KIỆN
+                  </button>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-black uppercase text-gray-400 mb-2">Phân loại</label>
                 <div className="space-y-3">
-                  <select name="category" value={formData.category} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 p-3 rounded-xl font-bold dark:text-white outline-none">
-                    {categoryOptions.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                  <select name="category" value={formData.category || ''} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 p-3 rounded-xl font-bold dark:text-white outline-none">
+                    <option value="">-- Chọn danh mục --</option>
+                    {currentCategoryOptions.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                   </select>
                   
-                  {/* Select Thương hiệu liên kết với Specs */}
                   <select value={specs.find(s => s.key === 'Thương hiệu')?.value || ''} onChange={handleBrandChange} className="w-full bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 p-3 rounded-xl font-bold dark:text-white outline-none">
                     <option value="">-- Chọn thương hiệu --</option>
                     {brandOptions.map(brand => (<option key={brand} value={brand}>{brand}</option>))}

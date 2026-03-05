@@ -34,7 +34,7 @@ const Header = () => {
     { name: 'Về Chúng Tôi', path: '/ve-chung-toi' },
     { name: 'Liên Hệ', path: '/lien-he' },
     { 
-      name: 'Hỗ Trợ Khách Hàng', // Đã sửa chính tả
+      name: 'Hỗ Trợ Khách Hàng',
       path: '#', // Tránh lỗi React Router khi path rỗng
       subMenu: [
         { name: 'Báo giá thi công', path: '/lien-he' },
@@ -44,6 +44,20 @@ const Header = () => {
       ]
     },
   ];
+
+  // Hàm kiểm tra Menu có đang Active hay không (Bao gồm kiểm tra cả menu con)
+  const checkIsActive = (link: any) => {
+    // 1. Kiểm tra nếu pathname trùng khớp hoàn toàn với link chính (trừ dấu #)
+    if (link.path !== '#' && pathname === link.path) return true;
+    
+    // 2. Nếu có menu con, kiểm tra xem pathname hiện tại có thuộc menu con không
+    if (link.subMenu) {
+      // Loại bỏ phần query (ví dụ: ?tab=door) để so sánh chính xác pathname
+      return link.subMenu.some((subItem: any) => pathname === subItem.path.split('?')[0]);
+    }
+    
+    return false;
+  };
 
   return (
     <>
@@ -70,9 +84,10 @@ const Header = () => {
                   <NavLink
                     to={link.path}
                     onClick={(e) => link.path === '#' && e.preventDefault()}
-                    className={({ isActive }) => `
+                    // Đã thay {({ isActive }) => ... } bằng hàm checkIsActive tự viết
+                    className={() => `
                       px-3 xl:px-4 py-2.5 rounded-full text-[12px] xl:text-[13px] font-bold uppercase tracking-widest transition-all block whitespace-nowrap
-                      ${isActive && link.path !== '#' ? 'bg-blue-700 text-white shadow-md' : 'text-gray-600 hover:text-blue-700'}
+                      ${checkIsActive(link) ? 'bg-[#003D20] text-white shadow-md' : 'text-gray-600 hover:text-blue-700'}
                     `}
                   >
                     {link.name}
@@ -89,9 +104,10 @@ const Header = () => {
                           <NavLink
                             key={subItem.path}
                             to={subItem.path}
+                            // Với menu con, ta vẫn dùng hàm mũi tên lấy isActive mặc định của NavLink hoặc tự bắt logic nếu cần
                             className={({ isActive }) => `
                               block px-6 py-3 text-xs font-bold uppercase tracking-wider transition-colors
-                              ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-600 hover:bg-gray-50 hover:text-blue-700'}
+                              ${isActive || pathname === subItem.path.split('?')[0] ? 'text-blue-700 bg-blue-50' : 'text-gray-600 hover:bg-gray-50 hover:text-blue-700'}
                             `}
                           >
                             {subItem.name}
@@ -130,7 +146,6 @@ const Header = () => {
       <div className={`fixed inset-0 z-[998] bg-white transition-transform duration-500 ease-in-out lg:hidden ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
-        {/* Sửa lại h-full và thêm overflow-y-auto để có thể cuộn khi nội dung menu dài */}
         <div className="flex flex-col h-full w-full overflow-y-auto pt-28 pb-10 items-center space-y-8 px-6">
           {navLinks.map((link) => (
             <div key={link.name} className="flex flex-col items-center w-full">
@@ -140,9 +155,10 @@ const Header = () => {
                   if (link.path === '#') e.preventDefault();
                   if (!link.subMenu) setIsOpen(false);
                 }}
-                className={({ isActive }) => `
+                // Cập nhật hàm active cho giao diện Mobile
+                className={() => `
                   text-xl sm:text-2xl font-black uppercase tracking-tighter transition-all text-center
-                  ${isActive && link.path !== '#' ? 'text-blue-700 scale-105' : 'text-gray-800'}
+                  ${checkIsActive(link) ? 'text-blue-700 scale-105' : 'text-gray-800'}
                 `}
               >
                 {link.name}
@@ -157,7 +173,7 @@ const Header = () => {
                       to={subItem.path}
                       className={({ isActive }) => `
                         text-sm font-bold uppercase tracking-widest transition-colors text-center
-                        ${isActive ? 'text-blue-700' : 'text-gray-500 hover:text-blue-700'}
+                        ${isActive || pathname === subItem.path.split('?')[0] ? 'text-blue-700' : 'text-gray-500 hover:text-blue-700'}
                       `}
                       onClick={() => setIsOpen(false)}
                     >

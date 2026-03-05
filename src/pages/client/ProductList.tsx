@@ -112,7 +112,9 @@ const ProductList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortOption, setSortOption] = useState('newest');
-  
+  // Thêm State lưu danh mục chuẩn từ CMS
+  const [cmsDoorCategories, setCmsDoorCategories] = useState<string[]>([]);
+  const [cmsAccessoryCategories, setCmsAccessoryCategories] = useState<string[]>([]);
   // Pagination & Modal
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -137,6 +139,9 @@ const ProductList = () => {
       try {
         const data = await doorService.getProductsByType(activeTab);
         setAllProducts(data);
+        const settings = await doorService.getSettings();
+        if (settings.doorCategories) setCmsDoorCategories(settings.doorCategories);
+        if (settings.accessoryCategories) setCmsAccessoryCategories(settings.accessoryCategories);
       } catch (error) {
         console.error(error);
       } finally {
@@ -163,7 +168,16 @@ const ProductList = () => {
   // 4. Pagination Logic
   const totalPages = Math.ceil(processedProducts.length / itemsPerPage);
   const displayedProducts = processedProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const categories = useMemo(() => Array.from(new Set(allProducts.map(p => p.category))), [allProducts]);
+  // Lấy danh mục theo Tab từ CMS, nếu CMS trống mới fallback tự động tìm
+  const categories = useMemo(() => {
+    const activeCmsCategories = activeTab === 'door' ? cmsDoorCategories : cmsAccessoryCategories;
+    
+    // Nếu trong Admin đã tạo danh mục -> Dùng danh mục của Admin
+    if (activeCmsCategories.length > 0) return activeCmsCategories;
+    
+    // Fallback: Nếu Admin lười chưa tạo -> Tự động quét từ các sản phẩm đang có
+    return Array.from(new Set(allProducts.map(p => p.category)));
+  }, [activeTab, cmsDoorCategories, cmsAccessoryCategories, allProducts]);
 
   // Handlers
   const handleTabChange = (tab: 'door' | 'accessory') => setSearchParams({ tab });
