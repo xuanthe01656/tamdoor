@@ -22,8 +22,8 @@ const Footer = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       const settings = await doorService.getSettings();
-      if (settings.websiteInfo) {
-        setInfo(settings.websiteInfo);
+      if (settings.companyInfo) {
+        setInfo(settings.companyInfo);
       }
     };
     fetchSettings();

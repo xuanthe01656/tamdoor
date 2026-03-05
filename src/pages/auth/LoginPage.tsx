@@ -17,7 +17,8 @@ const LoginPage = () => {
   // 3. EFFECT: Tự động chuyển hướng khi phát hiện đã là Admin
   // Logic: Bất cứ khi nào userRole thay đổi thành 'admin', tự động nhảy trang
   useEffect(() => {
-    if (currentUser && userRole === 'admin') {
+    // Chỉ cần có currentUser và có userRole (admin hoặc staff) là cho phép vào trang quản trị
+    if (currentUser && (userRole === 'admin' || userRole === 'staff')) {
       navigate('/admin');
     }
   }, [currentUser, userRole, navigate]);
@@ -30,8 +31,7 @@ const LoginPage = () => {
     
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // 4. QUAN TRỌNG: Xóa dòng navigate('/admin') ở đây đi.
-      // Hãy để useEffect ở trên tự lo việc chuyển hướng khi dữ liệu load xong.
+      // Giữ nguyên: Không gọi navigate ở đây, để useEffect tự xử lý
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
@@ -41,9 +41,14 @@ const LoginPage = () => {
       } else {
         setError('❌ Lỗi đăng nhập: ' + err.message);
       }
-      setLoading(false); // Chỉ tắt loading khi có lỗi
+      setLoading(false); // Tắt loading khi có lỗi Firebase
     } 
-    // Lưu ý: Không tắt loading ở finally nếu thành công, để tránh UI bị giật về form đăng nhập trước khi chuyển trang
+    
+    // Thêm dòng này để nút không bị quay mãi nếu role không hợp lệ
+    // Vì nếu role hợp lệ, trang đã chuyển đi mất rồi nên việc set lại state này không gây ảnh hưởng.
+    setTimeout(() => {
+        setLoading(false); 
+    }, 2000); 
   };
 
   return (

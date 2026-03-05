@@ -27,8 +27,10 @@ import {
   MOCK_PROJECTS,
   MOCK_FAQS,       
   MOCK_PROCESS,    
-  MOCK_WARRANTY    
-} from '../data/mockCMS'; 
+  MOCK_WARRANTY,
+  MOCK_COMPANY_INFO,
+  MOCK_ABOUT
+} from '../data/mockCMS';
 
 // --- ĐỊNH NGHĨA TYPES ---
 export interface PaginatedResult<T> {
@@ -261,24 +263,62 @@ export const doorService = {
   // ==========================================
 
   // 17. Lấy Settings (Gộp tất cả mọi thứ)
-  getSettings: async (): Promise<SystemSettings> => {
+  getSettings: async () => {
     try {
-      const docRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+      // SETTINGS_COLLECTION thường là chuỗi 'settings', document lưu có ID là 'cms'
+      const docRef = doc(db, 'settings', 'cms'); 
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
-        return docSnap.data() as SystemSettings;
-      } else {
-        // Trả về mặc định cơ bản nếu DB chưa có
+        const data = docSnap.data();
+        
+        // Trả về dữ liệu từ Firebase. Nếu trường nào trống, lấy dữ liệu MOCK bù vào.
         return {
-          categories: ["Cửa nhựa Composite", "Cửa thép vân gỗ", "Phụ kiện cửa"],
-          brands: ["Sungyu", "KOS", "Huy Hoàng"],
-          websiteInfo: {} as WebsiteInfo
+          companyInfo: data.companyInfo || MOCK_COMPANY_INFO,
+          about: data.about ? {
+            stats: data.about.stats || MOCK_ABOUT.stats,
+            coreValues: data.about.coreValues || MOCK_ABOUT.coreValues,
+            story: data.about.story || MOCK_ABOUT.story
+          } : MOCK_ABOUT,
+          heroSlides: data.heroSlides?.length ? data.heroSlides : MOCK_SLIDES,
+          usps: data.usps?.length ? data.usps : MOCK_ADVANTAGES,
+          projects: data.projects?.length ? data.projects : MOCK_PROJECTS,
+          faqs: data.faqs?.length ? data.faqs : MOCK_FAQS,
+          process: data.process?.length ? data.process : MOCK_PROCESS,
+          warranty: data.warranty || MOCK_WARRANTY,
+          categories: data.categories || ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"], // Dùng cho phần Add Product
+          brands: data.brands || ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
+        };
+      } else {
+        // Nếu Document 'cms' chưa từng được tạo trên Firebase
+        return {
+          companyInfo: MOCK_COMPANY_INFO,
+          about: MOCK_ABOUT,
+          heroSlides: MOCK_SLIDES,
+          usps: MOCK_ADVANTAGES,
+          projects: MOCK_PROJECTS,
+          faqs: MOCK_FAQS,
+          process: MOCK_PROCESS,
+          warranty: MOCK_WARRANTY,
+          categories: ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
+          brands: ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
         };
       }
     } catch (error) {
-      console.error("Lỗi lấy settings:", error);
-      return { categories: [], brands: [], websiteInfo: {} as WebsiteInfo };
+      console.error("Lỗi khi tải cấu hình CMS:", error);
+      // Fallback an toàn khi mất mạng hoặc chưa cấu hình rule Firebase
+      return {
+        companyInfo: MOCK_COMPANY_INFO,
+        about: MOCK_ABOUT,
+        heroSlides: MOCK_SLIDES,
+        usps: MOCK_ADVANTAGES,
+        projects: MOCK_PROJECTS,
+        faqs: MOCK_FAQS,
+        process: MOCK_PROCESS,
+        warranty: MOCK_WARRANTY,
+        categories: [],
+        brands: []
+      };
     }
   },
 
@@ -292,7 +332,25 @@ export const doorService = {
       return false;
     }
   },
+  updateSettings: async (newData: any) => {
+    try {
+      const docRef = doc(db, 'settings', 'cms');
+      const docSnap = await getDoc(docRef);
 
+      if (docSnap.exists()) {
+        // Nếu document đã tồn tại, dùng updateDoc để ghi đè hoặc thêm trường mới (merge)
+        await updateDoc(docRef, newData);
+      } else {
+        // Nếu document chưa tồn tại (lần đầu tiên bấm Lưu), dùng setDoc
+        await setDoc(docRef, newData);
+      }
+      return true;
+    } catch (error) {
+      console.error("Lỗi khi cập nhật cấu hình CMS:", error);
+      alert("Lưu thất bại! Vui lòng kiểm tra lại quyền truy cập Firebase.");
+      return false;
+    }
+  },
   // --- CÁC HÀM WRAPPER CHO CMS ---
   saveWebsiteInfo: async (info: WebsiteInfo) => {
     return doorService.saveSettings({ websiteInfo: info });

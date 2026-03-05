@@ -134,3 +134,40 @@ export const MOCK_WARRANTY: WarrantyPolicy = {
     "Khách hàng tự ý tháo dỡ, sửa chữa thay đổi kết cấu."
   ]
 };
+// 7. THÔNG TIN CÔNG TY (COMPANY INFO)
+export const MOCK_COMPANY_INFO = {
+  companyName: "CASADOOR",
+  phone: "0901 234 567",
+  email: "support@casardoor.vn",
+  address: "123 Đường Nguyễn Văn Linh, Quận Hải Châu, TP. Đà Nẵng",
+  zalo: "https://zalo.me/0901234567",
+  facebook: "https://facebook.com/casardoor",
+  taxId: "", 
+  mapIframe: '<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3833.837852233896!2d108.21980861536214!3d16.07388908887829!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314218314bcbd0e1%3A0x2863073cb0f90768!2zQ8O0bmcgVHkgVE5ISCBNVFYgQ-G7rWEgTmjhu7FhIEzDt2kgVGjDqXAgQ2FzYWRvb3I!5e0!3m2!1svi!2s!4v1628135248981!5m2!1svi!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
+};
+
+// 8. TRANG GIỚI THIỆU (ABOUT US)
+export const MOCK_ABOUT = {
+  stats: [
+    { value: "10+", label: "Năm kinh nghiệm" },
+    { value: "5000+", label: "Dự án hoàn thành" },
+    { value: "98%", label: "Khách hàng hài lòng" },
+    { value: "24/7", label: "Hỗ trợ kỹ thuật" }
+  ],
+  coreValues: [
+    { title: "Tín", desc: "CasarDoor đặt chữ TÍN lên hàng đầu, cam kết đúng chất lượng, đúng tiến độ." },
+    { title: "Tâm", desc: "Làm việc bằng cái TÂM, coi công trình của khách hàng như nhà của chính mình." },
+    { title: "Tầm", desc: "Không ngừng nâng cao TẦM vóc, mang đến giải pháp đẳng cấp quốc tế." }
+  ],
+  story: {
+    title: "Tầm nhìn & Sứ mệnh",
+    paragraphs: [
+      "Được thành lập với khát vọng nâng tầm không gian sống Việt, chúng tôi tiên phong trong việc ứng dụng các vật liệu mới như Composite, Nhựa ABS Hàn Quốc vào ngành cửa nội thất.",
+      "Chúng tôi cam kết mang đến những sản phẩm không chỉ bền bỉ trước khí hậu nhiệt đới khắc nghiệt mà còn là điểm nhấn nghệ thuật sang trọng cho mọi công trình."
+    ],
+    bullets: [
+      { title: "Tiên phong công nghệ", desc: "Cập nhật xu hướng khóa thông minh FaceID, cửa chống cháy chuẩn PCCC." },
+      { title: "Dịch vụ tận tâm", desc: "Bảo hành chính hãng 5 năm, lắp đặt chuyên nghiệp, tư vấn trung thực." }
+    ]
+  }
+};

@@ -29,10 +29,8 @@ export const COMPANY_INFO = {
     },
     footerLinks: {
       products: [
-        { name: "Cửa Nhựa Composite", link: "/san-pham?tab=door" },
-        { name: "Cửa Nhựa ABS Hàn Quốc", link: "/san-pham?tab=door" },
-        { name: "Khóa Cửa Thông Minh", link: "/san-pham?tab=accessory" },
-        { name: "Phụ Kiện Cửa Kính", link: "/san-pham?tab=accessory" }
+        { name: "Cửa Cao Cấp", link: "/san-pham?tab=door" },
+        { name: "Phụ Kiện Thông Minh", link: "/san-pham?tab=accessory" },
       ],
       support: [
         { name: "Báo giá thi công", link: "/lien-he" },
