@@ -31,6 +31,14 @@ const Header = () => {
         { name: 'Phụ Kiện', path: '/san-pham?tab=accessory' },
       ]
     },
+    { 
+      name: 'Ấn Phẩm',
+      path: '#', // Tránh lỗi React Router khi path rỗng
+      subMenu: [
+        { name: 'Màu Film', path: '/mau-film' },
+        { name: 'Catalogue', path: '/catalogue' },
+      ]
+    },
     { name: 'Về Chúng Tôi', path: '/ve-chung-toi' },
     { name: 'Liên Hệ', path: '/lien-he' },
     { 

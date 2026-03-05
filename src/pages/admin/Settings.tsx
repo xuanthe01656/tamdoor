@@ -11,6 +11,7 @@ import ProjectSettings from './components/settings/ProjectSettings';
 import ProcessSettings from './components/settings/ProcessSettings';
 import FaqSettings from './components/settings/FaqSettings';
 import WarrantySettings from './components/settings/WarrantySettings';
+import PublicationSettings from './components/settings/PublicationSettings';
 
 // Định nghĩa danh sách các Tab
 const TABS = [
@@ -23,6 +24,7 @@ const TABS = [
   { id: 'category', label: '🏷️ Phân loại SP' },
   { id: 'general', label: '🏢 Thông tin chung' },
   { id: 'about', label: 'ℹ️ Giới thiệu' },
+  { id: 'publication', label: '📚 Ấn phẩm' }
 ];
 
 const Settings = () => {
@@ -73,6 +75,11 @@ const Settings = () => {
             return <CompanyInfoSettings initialData={settingsData?.companyInfo} />;
         case 'about':
             return <AboutSettings initialData={settingsData?.about} />;
+        case 'publication':
+            return <PublicationSettings 
+                      initialFilms={settingsData?.colorFilms || []} 
+                      initialCatalogue={settingsData?.companyInfo?.catalogueUrl || ''} 
+                   />;
       default:
         return null;
     }

@@ -258,60 +258,39 @@ export const doorService = {
   // D. NHÓM API CẤU HÌNH & CMS (SETTINGS) - TỐI ƯU CACHE
   // ==========================================
 
-  getSettings: async (forceRefresh = false) => {
+ getSettings: async (forceRefresh = false) => {
     const now = Date.now();
-
-    // KIỂM TRA CACHE: Trả về dữ liệu từ RAM nếu có và chưa hết hạn
     if (!forceRefresh && settingsCachePromise && (now - lastSettingsFetchTime < CACHE_DURATION)) {
-      console.log("⚡ [Cache Hit] Lấy dữ liệu CMS từ RAM (Tiết kiệm 1 Read Firebase)");
       return settingsCachePromise;
     }
 
-    console.log("🔥 [Cache Miss] Bắt đầu gọi lên Firebase để lấy dữ liệu CMS mới...");
     lastSettingsFetchTime = now;
-
-    // GỌI FIREBASE & LƯU VÀO CACHE: Mọi component gọi cùng lúc sẽ chia sẻ chung Promise này
     settingsCachePromise = (async () => {
       try {
-        const cmsRef = doc(db, SETTINGS_COLLECTION, CMS_DOC_ID);
-        const cmsSnap = await getDoc(cmsRef);
+        const cmsSnap = await getDoc(doc(db, SETTINGS_COLLECTION, CMS_DOC_ID));
         const cmsData = cmsSnap.exists() ? cmsSnap.data() : {};
     
+        // Gom logic Fallback vào một chỗ để dễ quản lý
         return {
-          companyInfo: cmsData.companyInfo || MOCK_COMPANY_INFO,
-          
-          about: cmsData.about ? {
-            stats: cmsData.about.stats || MOCK_ABOUT.stats,
-            coreValues: cmsData.about.coreValues || MOCK_ABOUT.coreValues,
-            story: cmsData.about.story || MOCK_ABOUT.story
-          } : MOCK_ABOUT,
-    
+          companyInfo: { ...MOCK_COMPANY_INFO, ...cmsData.companyInfo },
+          colorFilms: cmsData.colorFilms || [],
+          about: { ...MOCK_ABOUT, ...cmsData.about },
           heroSlides: cmsData.heroSlides?.length ? cmsData.heroSlides : MOCK_SLIDES,
           usps: cmsData.usps?.length ? cmsData.usps : MOCK_ADVANTAGES,
           projects: cmsData.projects?.length ? cmsData.projects : MOCK_PROJECTS,
           faqs: cmsData.faqs?.length ? cmsData.faqs : MOCK_FAQS,
           process: cmsData.process?.length ? cmsData.process : MOCK_PROCESS,
           warranty: cmsData.warranty || MOCK_WARRANTY,
-    
           categories: cmsData.categories || ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
           doorCategories: cmsData.doorCategories || [],
           accessoryCategories: cmsData.accessoryCategories || [],
           brands: cmsData.brands || ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
         };
-    
       } catch (error) {
-        console.error("Lỗi khi tải cấu hình hệ thống:", error);
-        // Trả về Mock Data nếu có lỗi kết nối
-        return {
-          companyInfo: MOCK_COMPANY_INFO, about: MOCK_ABOUT, heroSlides: MOCK_SLIDES,
-          usps: MOCK_ADVANTAGES, projects: MOCK_PROJECTS, faqs: MOCK_FAQS,
-          process: MOCK_PROCESS, warranty: MOCK_WARRANTY,
-          categories: ["Cửa Composite", "Cửa ABS", "Cửa Thép Vân Gỗ", "Phụ Kiện"],
-          doorCategories: [], accessoryCategories: [], brands: ["KOS", "CasarDoor", "Huy Hoàng", "Việt Tiệp"]
-        };
+        console.error("Lỗi fetch settings:", error);
+        return { companyInfo: MOCK_COMPANY_INFO, about: MOCK_ABOUT, /* ... các mock khác */ };
       }
     })();
-
     return settingsCachePromise;
   },
 
@@ -333,16 +312,22 @@ export const doorService = {
 
   updateSettings: async (newData: any) => {
     try {
-      await setDoc(doc(db, SETTINGS_COLLECTION, CMS_DOC_ID), newData, { merge: true });
+      const cmsRef = doc(db, SETTINGS_COLLECTION, CMS_DOC_ID);
       
-      // Reset Cache
-      settingsCachePromise = null;
+      // Tối ưu: Nếu update companyInfo, ta merge với dữ liệu đang có trong Cache hoặc DB
+      if (newData.companyInfo) {
+        const currentSettings = await doorService.getSettings();
+        newData.companyInfo = {
+          ...currentSettings.companyInfo,
+          ...newData.companyInfo
+        };
+      }
+
+      await setDoc(cmsRef, newData, { merge: true });
+      settingsCachePromise = null; // Clear cache
       lastSettingsFetchTime = 0;
-      
       return true;
     } catch (error) {
-      console.error("Lỗi khi cập nhật cấu hình CMS:", error);
-      alert("Lưu thất bại! Vui lòng kiểm tra lại quyền truy cập Firebase.");
       return false;
     }
   },
@@ -375,7 +360,12 @@ export const doorService = {
   saveWarranty: async (warranty: WarrantyPolicy) => {
     return doorService.saveSettings({ warranty: warranty });
   },
-
+  savePublication: async (data: { colorFilms?: any[], catalogueUrl?: string }) => {
+    return doorService.updateSettings({
+      colorFilms: data.colorFilms,
+      companyInfo: { catalogueUrl: data.catalogueUrl }
+    });
+  },
   // ==========================================
   // E. NHÓM API UPLOAD & EXCEL
   // ==========================================

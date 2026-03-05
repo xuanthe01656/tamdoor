@@ -16,6 +16,8 @@ import WarrantyPage from './pages/client/WarrantyPage'
 import ProcessPage from './pages/client/ProcessPage'
 import FAQPage from './pages/client/FAQPage'
 import ProductDetail from './pages/client/ProductDetail';
+import ColorFilm from './pages/client/ColorFilm';
+import Catalogue from './pages/client/Catalogue';
 
 // --- 3. ADMIN PAGES ---
 import Dashboard from './pages/admin/Dashboard'
@@ -85,6 +87,8 @@ const clientDomainRoutes = [
       { path: "chinh-sach-bao-hanh", element: <WarrantyPage /> },
       { path: "quy-trinh-lam-viec", element: <ProcessPage /> },
       { path: "cau-hoi-thuong-gap", element: <FAQPage /> },
+      { path: "mau-film", element: <ColorFilm /> },
+      { path: "catalogue", element: <Catalogue /> },
     ],
   },
   { path: "/login", element: <LoginPage /> },
