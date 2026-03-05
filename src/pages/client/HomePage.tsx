@@ -48,7 +48,7 @@ const HomePage = () => {
             if (settings.heroSlides && settings.heroSlides.length > 0) setSlides(settings.heroSlides);
             if (settings.usps && settings.usps.length > 0) setAdvantages(settings.usps);
             if (settings.projects && settings.projects.length > 0) setProjects(settings.projects);
-            if (settings.websiteInfo) setInfo(settings.websiteInfo);
+            if (settings.companyInfo) setInfo(settings.companyInfo);
         }
 
         // B. Lấy sản phẩm nổi bật

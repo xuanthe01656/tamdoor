@@ -10,8 +10,8 @@ const FloatingContact = () => {
   useEffect(() => {
     const fetchInfo = async () => {
       const settings = await doorService.getSettings();
-      if (settings?.websiteInfo) {
-        setInfo(settings.websiteInfo);
+      if (settings?.companyInfo) {
+        setInfo(settings.companyInfo);
       }
     };
     fetchInfo();

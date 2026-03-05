@@ -37,7 +37,7 @@ const HeroSettings = ({ initialData }: Props) => {
       </div>
 
       <div className="space-y-6">
-        {slides.map((slide, index) => (
+        {slides.map((slide) => (
           <div key={slide.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg flex flex-col md:flex-row gap-6 bg-gray-50 dark:bg-gray-900/50">
             <div className="w-full md:w-1/3">
               <label className="text-xs font-bold text-gray-500 mb-1 block">Link ảnh Banner</label>

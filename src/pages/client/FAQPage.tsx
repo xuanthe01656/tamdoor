@@ -17,8 +17,8 @@ const FAQPage = () => {
 
         // 2. Lấy thông tin cấu hình (để hiển thị số điện thoại)
         const settings = await doorService.getSettings();
-        if (settings?.websiteInfo) {
-            setInfo(settings.websiteInfo);
+        if (settings?.companyInfo) {
+            setInfo(settings.companyInfo);
         }
     };
     fetchData();
