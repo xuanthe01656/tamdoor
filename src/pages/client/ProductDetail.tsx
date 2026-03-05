@@ -7,6 +7,18 @@ const ProductDetail = () => {
   const { slug } = useParams(); // Lấy slug từ URL
   const [product, setProduct] = useState<Door | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Quản lý ảnh đang hiển thị và màu đang chọn
+  const [activeImage, setActiveImage] = useState<string>('');
+  const [activeColor, setActiveColor] = useState<string>('');
+
+  // Khi load xong product, set ảnh mặc định là ảnh đại diện
+  useEffect(() => {
+    if (product) {
+      setActiveImage(product.image);
+      setActiveColor('default');
+    }
+  }, [product]);
 
   // Load dữ liệu
   useEffect(() => {
@@ -14,7 +26,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       if (!slug) return;
       const data = await doorService.getProductBySlug(slug);
-      setProduct(data||null);
+      setProduct(data || null);
       setLoading(false);
     };
     fetchProduct();
@@ -49,10 +61,11 @@ const ProductDetail = () => {
           {/* 2. CỘT HÌNH ẢNH */}
           <div className="space-y-4">
             <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm relative group">
+              {/* Đã đổi src thành activeImage để thay đổi khi click màu */}
               <img 
-                src={product.image} 
+                src={activeImage} 
                 alt={product.name} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
               />
               {/* Tag danh mục */}
               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-gray-800 shadow-sm border border-gray-100">
@@ -68,16 +81,51 @@ const ProductDetail = () => {
             </h1>
 
             {/* Giá bán */}
-            <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-100">
-              {/* {product.price > 0 ? (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              {product.price > 0 ? (
                 <div className="flex items-end gap-3">
                   <span className="text-3xl font-bold text-blue-700">{product.price.toLocaleString('vi-VN')} đ</span>
                   <span className="text-gray-400 text-sm mb-1">(Giá tham khảo)</span>
                 </div>
-              ) : ( */}
+              ) : (
                 <span className="text-2xl font-bold text-red-500">LIÊN HỆ BÁO GIÁ</span>
-              {/* )} */}
+              )}
             </div>
+
+            {/* BỘ CHỌN MÀU SẮC (Sẽ ẩn nếu không có màu nào được thêm) */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="mb-8 border-t border-gray-100 pt-6">
+                <h3 className="text-sm font-bold uppercase text-gray-500 mb-4 tracking-widest flex items-center gap-2">
+                  🎨 Màu sắc: <span className="text-blue-600">{activeColor !== 'default' ? activeColor : 'Mặc định'}</span>
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {/* Nút màu mặc định */}
+                  <button 
+                    onClick={() => { setActiveImage(product.image); setActiveColor('default'); }}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-gray-50 ${activeColor === 'default' ? 'border-blue-600 shadow-md scale-110' : 'border-gray-200 hover:border-blue-300 opacity-70 hover:opacity-100'}`}
+                    title="Màu mặc định"
+                  >
+                    <img src={product.image} className="w-full h-full object-cover" alt="Mặc định" />
+                  </button>
+
+                  {/* Các nút màu biến thể */}
+                  {product.colors.map((colorItem, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => { setActiveImage(colorItem.image); setActiveColor(colorItem.name); }}
+                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all relative group cursor-pointer bg-gray-50 ${activeColor === colorItem.name ? 'border-blue-600 shadow-md scale-110' : 'border-gray-200 hover:border-blue-300 opacity-70 hover:opacity-100'}`}
+                      title={colorItem.name}
+                    >
+                      <img src={colorItem.image} className="w-full h-full object-cover" alt={colorItem.name} />
+                      {/* Tooltip khi hover (Desktop) */}
+                      <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center text-[10px] font-bold text-white text-center leading-tight px-1 backdrop-blur-sm transition-all">
+                         {colorItem.name}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Đặc điểm nổi bật (Features) */}
             {product.features && product.features.length > 0 && (

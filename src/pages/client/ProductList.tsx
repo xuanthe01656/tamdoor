@@ -1,10 +1,107 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, Link } from 'react-router-dom'; // Import Link
+import { useSearchParams, Link } from 'react-router-dom';
 import { doorService } from '../../services/doorService';
 import { Door } from '../../interfaces/door';
-// import ProductCard from '../../components/product/ProductCard'; // Tạm bỏ cái này để code trực tiếp cho dễ hiểu
 import ProductModal from '../../components/common/ProductModal';
 
+// =========================================================================
+// COMPONENT CON: PRODUCT CARD (Tách riêng để quản lý state hình ảnh/màu sắc cho từng thẻ)
+// =========================================================================
+const ProductCardInline = ({ item, handleQuickView }: { item: Door, handleQuickView: any }) => {
+  const [currentImage, setCurrentImage] = useState(item.image);
+  const [activeColor, setActiveColor] = useState('default');
+
+  // Reset lại ảnh khi data bị thay đổi (lọc, chuyển trang)
+  useEffect(() => {
+    setCurrentImage(item.image);
+    setActiveColor('default');
+  }, [item]);
+
+  return (
+    <div className="group flex flex-col h-full relative">
+      {/* Vùng Hình ảnh - Bấm vào sẽ chuyển trang Detail */}
+      <Link to={`/san-pham/${item.slug}`} className="block relative aspect-[3/4] overflow-hidden bg-white mb-4 rounded-2xl shadow-sm border border-gray-100 transition-all duration-300 group-hover:shadow-xl group-hover:border-blue-100">
+        <img 
+          src={currentImage} 
+          alt={item.name} 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image'; }}
+        />
+        
+        {/* Tag Category */}
+        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-800 shadow-sm border border-gray-100 z-10">
+          {item.category}
+        </div>
+
+        {/* OVERLAY & NÚT XEM NHANH */}
+        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+          <button 
+            onClick={(e) => handleQuickView(e, item)}
+            className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white text-gray-900 px-6 py-3 rounded-full font-bold text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:text-white border border-gray-100"
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+              Xem nhanh
+            </span>
+          </button>
+        </div>
+      </Link>
+
+      {/* Vùng Thông tin */}
+      <div className="flex flex-col flex-grow px-1">
+        
+        {/* --- THANH CHỌN MÀU SẮC (Color Swatches) --- */}
+        {item.colors && item.colors.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3 z-20">
+            {/* Nút màu gốc */}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(item.image); setActiveColor('default'); }}
+              onMouseEnter={() => { setCurrentImage(item.image); setActiveColor('default'); }}
+              className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === 'default' ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
+              title="Mặc định"
+            >
+              <img src={item.image} className="w-full h-full object-cover" alt="Mặc định"/>
+            </button>
+            
+            {/* Các nút màu biến thể */}
+            {item.colors.map((c, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(c.image); setActiveColor(c.name); }}
+                onMouseEnter={() => { setCurrentImage(c.image); setActiveColor(c.name); }}
+                className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === c.name ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
+                title={c.name}
+              >
+                <img src={c.image} className="w-full h-full object-cover" alt={c.name}/>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <Link to={`/san-pham/${item.slug}`} className="group-hover:text-blue-700 transition-colors">
+          <h3 className="font-bold text-lg uppercase leading-snug line-clamp-2 mb-2 min-h-[3rem]">
+            {item.name}
+          </h3>
+        </Link>
+        
+        <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+          <span className="text-red-500 font-black text-xs uppercase bg-red-50 px-2 py-1 rounded">Liên hệ</span>
+          
+          <button 
+            onClick={(e) => handleQuickView(e, item)}
+            className="md:hidden text-gray-400 hover:text-blue-600"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =========================================================================
+// TRANG CHÍNH: PRODUCT LIST
+// =========================================================================
 const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') === 'accessory' ? 'accessory' : 'door';
@@ -78,10 +175,9 @@ const ProductList = () => {
     document.getElementById('product-grid-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // Hàm mở modal (Sự kiện Xem nhanh)
   const handleQuickView = (e: React.MouseEvent, product: Door) => {
-    e.preventDefault(); // QUAN TRỌNG: Chặn Link chuyển trang
-    e.stopPropagation(); // Chặn sự kiện lan ra ngoài
+    e.preventDefault(); 
+    e.stopPropagation(); 
     setSelectedProduct(product);
     setIsModalOpen(true);
   };
@@ -89,7 +185,7 @@ const ProductList = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       
-      {/* === 1. HERO BANNER (Giữ nguyên) === */}
+      {/* === 1. HERO BANNER === */}
       <div className="relative h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed transition-transform duration-1000 scale-105"
@@ -144,67 +240,8 @@ const ProductList = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 animate-fadeIn">
               {displayedProducts.map(item => (
-                // --- BẮT ĐẦU CARD SẢN PHẨM ---
-                <div key={item.id} className="group flex flex-col h-full relative">
-                  
-                  {/* Vùng Hình ảnh - Bấm vào sẽ chuyển trang Detail */}
-                  <Link to={`/san-pham/${item.slug}`} className="block relative aspect-[3/4] overflow-hidden bg-white mb-6 rounded-2xl shadow-sm border border-gray-100 transition-all duration-300 group-hover:shadow-xl group-hover:border-blue-100">
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image'; }}
-                    />
-                    
-                    {/* Tag Category */}
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-800 shadow-sm border border-gray-100 z-10">
-                      {item.category}
-                    </div>
-
-                    {/* OVERLAY & NÚT XEM NHANH */}
-                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <button 
-                        // Sự kiện Xem nhanh (quan trọng: dùng e.preventDefault để không bị Link bao ngoài kích hoạt)
-                        onClick={(e) => handleQuickView(e, item)}
-                        className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white text-gray-900 px-6 py-3 rounded-full font-bold text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:text-white border border-gray-100"
-                      >
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                          Xem nhanh
-                        </span>
-                      </button>
-                    </div>
-                  </Link>
-
-                  {/* Vùng Thông tin - Bấm vào cũng chuyển trang */}
-                  <div className="flex flex-col flex-grow px-1">
-                    <Link to={`/san-pham/${item.slug}`} className="group-hover:text-blue-700 transition-colors">
-                      <h3 className="font-bold text-lg uppercase leading-snug line-clamp-2 mb-2 min-h-[3rem]">
-                        {item.name}
-                      </h3>
-                    </Link>
-                    
-                    <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                      {/* {item.price > 0 ? (
-                        <div className="flex flex-col">
-                           <span className="text-[10px] text-gray-400 font-bold uppercase">Giá bán</span>
-                           <span className="text-blue-700 font-black text-sm">{item.price.toLocaleString('vi-VN')} đ</span>
-                        </div>
-                      ) : ( */}
-                        <span className="text-red-500 font-black text-xs uppercase bg-red-50 px-2 py-1 rounded">Liên hệ</span>
-                      {/* )} */}
-                      
-                      {/* Nút nhỏ gọi modal ở dưới (dự phòng) */}
-                      <button 
-                        onClick={(e) => handleQuickView(e, item)}
-                        className="md:hidden text-gray-400 hover:text-blue-600"
-                      >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                // --- KẾT THÚC CARD SẢN PHẨM ---
+                // Gọi Component hiển thị Card nội bộ
+                <ProductCardInline key={item.id} item={item} handleQuickView={handleQuickView} />
               ))}
             </div>
 

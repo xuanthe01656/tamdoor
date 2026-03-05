@@ -107,14 +107,25 @@ const HomePage = () => {
     }
   };
 
-  // --- COMPONENT CON: PRODUCT ITEM ---
-  const ProductItem = ({ item }: { item: Door }) => (
-    <div className="group flex flex-col h-full relative cursor-pointer bg-white">
-      <Link to={`/san-pham/${item.slug}`} className="flex flex-col h-full">
-        {/* Image Box */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-6 rounded-lg shadow-sm border border-gray-100 group-hover:shadow-xl transition-all duration-300">
+  // =========================================================================
+  // --- COMPONENT CON: PRODUCT ITEM (Đã cập nhật tính năng đổi màu) ---
+  // =========================================================================
+  const ProductItem = ({ item }: { item: Door }) => {
+    const [currentImage, setCurrentImage] = useState(item.image);
+    const [activeColor, setActiveColor] = useState('default');
+
+    useEffect(() => {
+      setCurrentImage(item.image);
+      setActiveColor('default');
+    }, [item]);
+
+    return (
+      <div className="group flex flex-col h-full relative cursor-pointer bg-white">
+        
+        {/* Vùng Ảnh (Bấm vào thì chuyển trang) */}
+        <Link to={`/san-pham/${item.slug}`} className="block relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4 rounded-lg shadow-sm border border-gray-100 group-hover:shadow-xl transition-all duration-300">
           <img 
-            src={item.image} 
+            src={currentImage} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
             alt={item.name} 
             onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image'; }}
@@ -133,13 +144,45 @@ const HomePage = () => {
               Xem nhanh
             </button>
           </div>
-        </div>
+        </Link>
         
         {/* Info Section */}
         <div className="flex flex-col flex-grow px-1">
-          <h3 className="font-bold text-lg uppercase leading-tight group-hover:text-blue-700 transition-colors line-clamp-2 min-h-[3rem]">
-            {item.name}
-          </h3>
+          
+          {/* --- THANH CHỌN MÀU SẮC (Color Swatches) --- */}
+          {item.colors && item.colors.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3 z-20">
+              {/* Nút màu gốc */}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(item.image); setActiveColor('default'); }}
+                onMouseEnter={() => { setCurrentImage(item.image); setActiveColor('default'); }}
+                className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === 'default' ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
+                title="Mặc định"
+              >
+                <img src={item.image} className="w-full h-full object-cover" alt="Mặc định"/>
+              </button>
+              
+              {/* Các nút màu biến thể */}
+              {item.colors.map((c, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(c.image); setActiveColor(c.name); }}
+                  onMouseEnter={() => { setCurrentImage(c.image); setActiveColor(c.name); }}
+                  className={`w-6 h-6 rounded-full border-2 overflow-hidden transition-all shadow-sm ${activeColor === c.name ? 'border-blue-600 scale-110' : 'border-gray-200 hover:border-blue-400'}`}
+                  title={c.name}
+                >
+                  <img src={c.image} className="w-full h-full object-cover" alt={c.name}/>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <Link to={`/san-pham/${item.slug}`}>
+            <h3 className="font-bold text-lg uppercase leading-tight group-hover:text-blue-700 transition-colors line-clamp-2 min-h-[3rem]">
+              {item.name}
+            </h3>
+          </Link>
+
           <p className="text-gray-500 text-xs mb-4 line-clamp-2 leading-relaxed mt-2">
             {item.description}
           </p>
@@ -147,13 +190,13 @@ const HomePage = () => {
           <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Giá bán:</span>
             <span className="text-red-500 font-black text-xs uppercase tracking-widest">
-                  LIÊN HỆ
+                LIÊN HỆ
             </span>
           </div>
         </div>
-      </Link>
-    </div>
-  );
+      </div>
+    );
+  };
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white font-black text-3xl animate-pulse">CASARDOOR...</div>;
 

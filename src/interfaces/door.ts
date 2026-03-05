@@ -3,7 +3,10 @@ export interface ProductSpecification {
   key: string;   // Ví dụ: "Kích thước phủ bì"
   value: string; // Ví dụ: "900 x 2200 mm"
 }
-
+export interface ProductColor {
+  name: string;   
+  image: string; 
+}
 export interface Door {
   id?: string;   // ID từ Firebase
   name: string;
@@ -12,6 +15,7 @@ export interface Door {
   type: 'door' | 'accessory';
   price: number;
   image: string;
+  colors?: ProductColor[];
   description: string;
   features?: string[];
   specifications?: ProductSpecification[]; 
