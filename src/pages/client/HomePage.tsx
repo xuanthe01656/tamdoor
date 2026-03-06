@@ -128,7 +128,7 @@ const HomePage = () => {
             src={currentImage} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
             alt={item.name} 
-            onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image'; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.jp/24/cccccc/ffffff/400x600.png?text=No%20Image'; }}
           />
           
           <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 text-[10px] font-black uppercase tracking-wider text-gray-900 shadow-sm rounded-sm z-10">

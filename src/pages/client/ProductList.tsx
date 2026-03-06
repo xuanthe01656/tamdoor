@@ -24,7 +24,7 @@ const ProductCardInline = ({ item, handleQuickView }: { item: Door, handleQuickV
           src={currentImage} 
           alt={item.name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image'; }}
+          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.jp/24/cccccc/ffffff/400x600.png?text=No%20Image'; }}
         />
         
         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-800 shadow-sm border border-gray-100 z-10">
