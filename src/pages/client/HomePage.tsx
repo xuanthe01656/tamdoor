@@ -186,9 +186,15 @@ const HomePage = () => {
           
           <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Giá bán:</span>
-            <span className="text-red-500 font-black text-xs uppercase tracking-widest">
+            {item.price && item.price > 0 ? (
+              <span className="text-blue-700 font-black text-sm uppercase tracking-widest">
+                {item.price.toLocaleString('vi-VN')} đ
+              </span>
+            ) : (
+              <span className="text-red-500 font-black text-xs uppercase tracking-widest">
                 LIÊN HỆ
-            </span>
+              </span>
+            )}
           </div>
         </div>
       </div>
