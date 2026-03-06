@@ -209,7 +209,7 @@ const ProductList = () => {
       <div className="relative h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed transition-transform duration-1000 scale-105"
-          style={{ backgroundImage: activeTab === 'door' ? "url('https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=2000&auto=format&fit=crop')" : "url('https://images.unsplash.com/photo-1558002038-1091a166111c?q=80&w=2000&auto=format&fit=crop')" }}
+          style={{ backgroundImage: activeTab === 'door' ? "url('https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=2000&auto=format&fit=crop')" : "url('https://res.cloudinary.com/dchk5caai/image/upload/v1772759564/Pngtree_digital_smart_door_lock_attached_16503328_ex8irp.jpg')" }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-gray-50/90 md:to-transparent"></div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-10 md:mt-0">

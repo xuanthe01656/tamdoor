@@ -224,7 +224,7 @@ const AdminProductList = () => {
                           src={product.image} 
                           alt={product.name} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=No+Img'; }}
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.jp/24/cccccc/ffffff/400x600.png?text=No%20Image'; }}
                         />
                       </div>
                     </td>
