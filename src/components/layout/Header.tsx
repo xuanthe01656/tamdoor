@@ -40,12 +40,11 @@ const Header = () => {
       ]
     },
     { name: 'Về Chúng Tôi', path: '/ve-chung-toi' },
-    { name: 'Liên Hệ', path: '/lien-he' },
     { 
       name: 'Hỗ Trợ Khách Hàng',
       path: '#', // Tránh lỗi React Router khi path rỗng
       subMenu: [
-        { name: 'Báo giá thi công', path: '/lien-he' },
+        { name: 'Báo giá thi công & Liên hệ', path: '/lien-he' },
         { name: 'Chính sách bảo hành', path: '/chinh-sach-bao-hanh' },
         { name: 'Quy trình làm việc', path: '/quy-trinh-lam-viec' },
         { name: 'Câu hỏi thường gặp', path: '/cau-hoi-thuong-gap' },
